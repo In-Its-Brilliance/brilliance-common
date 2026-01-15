@@ -1,0 +1,36 @@
+ground_level: 60
+water_level: 58
+
+surface_noise: !noise
+  fractal_octaves: 2
+  fractal_gain: 0.6
+  fractal_lacunarity: 0.8
+  frequency: 0.06
+  multiplier: 10.0
+surface_multiplier: 5.0
+
+river_noise: !noise
+  fractal_type: fbm
+  fractal_octaves: 4
+  fractal_gain: 1.0
+  fractal_lacunarity: 1.0
+  frequency: 0.005
+  miltiplier: 4.0
+river_multiplier: 1.0
+
+stream_noise: !noise
+  fractal_type: rigid_multi
+  fractal_octaves: 3
+  fractal_gain: 0.46
+  fractal_lacunarity: 0.05
+  frequency: 0.008
+  miltiplier: 2.175
+  powf: 4.0
+stream_second_noise: !noise
+  fractal_octaves: 1
+  fractal_gain: 0.2
+  fractal_lacunarity: 0.1
+  frequency: 0.04
+  multiplier: 15
+stream_multiplier: 15
+sand_threshold: 2.0

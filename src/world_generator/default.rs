@@ -11,10 +11,13 @@ use bracket_lib::random::RandomNumberGenerator;
 use serde::{Deserialize, Serialize};
 use serde_inline_default::serde_inline_default;
 
-use super::{noise::{GeneratedNoise, Noise}, traits::IWorldGenerator};
+use super::{
+    noise::{GeneratedNoise, Noise},
+    traits::IWorldGenerator,
+};
 
 #[serde_inline_default]
-#[derive(Default, Serialize, Deserialize)]
+#[derive(Serialize, Deserialize)]
 pub struct WorldGeneratorSettings {
     #[serde_inline_default(60.0)]
     ground_level: f32,
@@ -36,6 +39,13 @@ pub struct WorldGeneratorSettings {
 
     #[serde_inline_default(5.0)]
     sand_threshold: f32,
+}
+
+impl Default for WorldGeneratorSettings {
+    fn default() -> Self {
+        let text = include_str!("default_settings.yml");
+        serde_yaml::from_str(text).expect("default_settings.yml is invalid")
+    }
 }
 
 pub struct WorldGenerator {
@@ -78,14 +88,19 @@ impl IWorldGenerator for WorldGenerator {
 }
 
 impl WorldGenerator {
-    fn generate_section_data(&self, chunk_position: &ChunkPosition, vertical_index: usize) -> ChunkSectionData {
+    fn generate_section_data(
+        &self,
+        chunk_position: &ChunkPosition,
+        vertical_index: usize,
+    ) -> ChunkSectionData {
         let mut section_data: ChunkSectionData = Default::default();
 
         for x in 0_u8..(CHUNK_SIZE as u8) {
             for z in 0_u8..(CHUNK_SIZE as u8) {
                 let x_map = x as f32 + (chunk_position.x as f32 * CHUNK_SIZE as f32);
                 let z_map = z as f32 + (chunk_position.z as f32 * CHUNK_SIZE as f32);
-                let surface = self.surface_noise.get_noise(x_map, z_map) * self.settings.surface_multiplier
+                let surface = self.surface_noise.get_noise(x_map, z_map)
+                    * self.settings.surface_multiplier
                     + self.settings.ground_level;
 
                 // Множитель для рек, превращающий их в реки
@@ -94,7 +109,8 @@ impl WorldGenerator {
                 // Реки
                 let stream_noise = self.stream_noise.get_noise(x_map, z_map);
                 let stream_second_noise = self.stream_second_noise.get_noise(x_map, z_map);
-                let stream = (stream_noise + (stream_noise * stream_second_noise) * (1.0 + river_noise))
+                let stream = (stream_noise
+                    + (stream_noise * stream_second_noise) * (1.0 + river_noise))
                     * self.settings.stream_multiplier;
 
                 for y in 0_u8..(CHUNK_SIZE as u8) {
@@ -106,7 +122,8 @@ impl WorldGenerator {
                         section_data.insert(&pos, BlockDataInfo::create(BlockID::Grass.id(), None));
 
                         if stream > self.settings.sand_threshold {
-                            section_data.insert(&pos, BlockDataInfo::create(BlockID::Sand.id(), None));
+                            section_data
+                                .insert(&pos, BlockDataInfo::create(BlockID::Sand.id(), None));
                         }
                     } else if y_global < surface && y_global < self.settings.water_level {
                         section_data.insert(&pos, BlockDataInfo::create(BlockID::Water.id(), None));
