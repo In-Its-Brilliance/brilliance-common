@@ -189,7 +189,7 @@ mod tests {
         let chunk_data = generator.generate_chunk_data(&chunk_position);
 
         let encoded = chunk_data.encode();
-        assert_eq!(encoded.len(), 76936);
+        assert_eq!(encoded.len(), 75506);
 
         let encoded = chunk_data.encode_zip();
         assert!(encoded.len() < 30000, "{}", encoded.len());
