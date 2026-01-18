@@ -44,6 +44,7 @@ bracket-random = "0.8.7"
 rusqlite = { version = "0.35.0", features = ["bundled", "blob"] }
 
 zip = "7.1"
+zstd = "0.13"
 
 # For spiral iteration
 spiral = "0.2"

@@ -325,7 +325,7 @@ mod tests {
 
         // Save new chunk
         let chunk_id = storage
-            .save_chunk_data(&chunk_position, &sections.encode_zip())
+            .save_chunk_data(&chunk_position, &sections.compress())
             .unwrap();
         let has_chunk_id = storage.has_chunk_data(&chunk_position).unwrap().unwrap();
         assert_eq!(has_chunk_id, chunk_id);
@@ -333,12 +333,12 @@ mod tests {
         // Save new chunk
         let sections = generate_chunk(2, &chunk_position);
         let updated_chunk_id = storage
-            .save_chunk_data(&chunk_position, &sections.encode_zip())
+            .save_chunk_data(&chunk_position, &sections.compress())
             .unwrap();
         assert_eq!(has_chunk_id, updated_chunk_id);
 
         let encoded = storage.read_chunk_data(has_chunk_id).unwrap();
-        let loaded_sections = ChunkData::decode_zip(encoded).unwrap();
+        let loaded_sections = ChunkData::decompress(encoded).unwrap();
 
         assert_eq!(loaded_sections.get(0).unwrap().len(), sections.get(0).unwrap().len());
 

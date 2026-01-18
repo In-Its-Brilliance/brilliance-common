@@ -1,10 +1,7 @@
-use crate::{VERTICAL_SECTIONS, blocks::block_info::BlockFace};
+use crate::{blocks::block_info::BlockFace, VERTICAL_SECTIONS};
 use serde::{Deserialize, Serialize};
-use std::{
-    collections::HashMap,
-    io::{Read, Write},
-};
-use zip::{CompressionMethod, DateTime};
+use std::collections::HashMap;
+use zip::CompressionMethod;
 
 use super::block_position::{BlockPosition, ChunkBlockPosition};
 
@@ -57,8 +54,6 @@ pub struct ChunkSectionData {
     data: HashMap<u16, BlockDataInfo>,
 }
 
-const COMPRESS: CompressionMethod = CompressionMethod::Bzip2;
-
 impl ChunkSectionData {
     pub fn change(&mut self, pos: &ChunkBlockPosition, block: Option<BlockDataInfo>) {
         match block {
@@ -94,41 +89,20 @@ pub struct ChunkData {
 }
 
 impl ChunkData {
-    pub fn encode_zip(&self) -> Vec<u8> {
-        let mut archive_data: Vec<u8> = Default::default();
+    pub fn compress(&self) -> Vec<u8> {
+        let raw = self.encode();
+        zstd::encode_all(&raw[..], 7).unwrap()
+    }
 
-        let buff = std::io::Cursor::new(&mut archive_data);
-        let mut writer = zip::ZipWriter::new(buff);
-
-        let options = zip::write::SimpleFileOptions::default()
-            .compression_method(COMPRESS)
-            .last_modified_time(DateTime::default());
-
-        writer.start_file("data", options).unwrap();
-        writer.write_all(&self.encode()).unwrap();
-        writer.finish().unwrap();
-        archive_data
+    pub fn decompress(data: Vec<u8>) -> Result<Self, String> {
+        let raw = zstd::decode_all(&data[..])
+            .map_err(|e| format!("Decompress error: {}", e))?;
+        Self::decode(raw)
     }
 
     pub fn encode(&self) -> Vec<u8> {
         let encoded = bincode::serialize(&self).unwrap();
         encoded
-    }
-
-    pub fn decode_zip(data: Vec<u8>) -> Result<Self, String> {
-        let file = std::io::Cursor::new(&data);
-        let mut zip = zip::ZipArchive::new(file).unwrap();
-
-        let mut archive_file_data = Vec::new();
-
-        for i in 0..zip.len() {
-            let archive_file = zip.by_index(i).unwrap();
-            for i in archive_file.bytes() {
-                archive_file_data.push(i.unwrap());
-            }
-            break;
-        }
-        ChunkData::decode(archive_file_data)
     }
 
     pub fn decode(encoded: Vec<u8>) -> Result<Self, String> {
@@ -191,10 +165,10 @@ mod tests {
         let encoded = chunk_data.encode();
         assert_eq!(encoded.len(), 75506);
 
-        let encoded = chunk_data.encode_zip();
-        assert!(encoded.len() < 30000, "{}", encoded.len());
+        let encoded = chunk_data.compress();
+        assert!(encoded.len() < 30000, "{}", format!("compressed result len: {}", encoded.len()));
 
-        let decoded_chunk_data = ChunkData::decode_zip(encoded).unwrap();
+        let decoded_chunk_data = ChunkData::decompress(encoded).unwrap();
         assert_eq!(
             chunk_data.get(0).unwrap().len(),
             decoded_chunk_data.get(0).unwrap().len()
