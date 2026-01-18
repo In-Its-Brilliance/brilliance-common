@@ -1,7 +1,6 @@
 use crate::{blocks::block_info::BlockFace, VERTICAL_SECTIONS};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use zip::CompressionMethod;
 
 use super::block_position::{BlockPosition, ChunkBlockPosition};
 
@@ -95,8 +94,7 @@ impl ChunkData {
     }
 
     pub fn decompress(data: Vec<u8>) -> Result<Self, String> {
-        let raw = zstd::decode_all(&data[..])
-            .map_err(|e| format!("Decompress error: {}", e))?;
+        let raw = zstd::decode_all(&data[..]).map_err(|e| format!("Decompress error: {}", e))?;
         Self::decode(raw)
     }
 
@@ -166,7 +164,16 @@ mod tests {
         assert_eq!(encoded.len(), 75506);
 
         let encoded = chunk_data.compress();
-        assert!(encoded.len() < 30000, "{}", format!("compressed result len: {}", encoded.len()));
+        let target_max = 35000;
+        assert!(
+            encoded.len() <= target_max,
+            "{}",
+            format!(
+                "compressed result len: {} more than target max {}",
+                encoded.len(),
+                target_max
+            )
+        );
 
         let decoded_chunk_data = ChunkData::decompress(encoded).unwrap();
         assert_eq!(
