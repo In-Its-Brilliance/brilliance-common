@@ -1,11 +1,6 @@
-use std::collections::BTreeMap;
-
-use crate::chunks::{
-    chunk_data::{BlockIndexType, ChunkData},
-    chunk_position::ChunkPosition,
-};
-
 use super::taits::{IWorldStorage, WorldInfo, WorldStorageSettings};
+use crate::chunks::{chunk_data::BlockIndexType, chunk_position::ChunkPosition};
+use std::collections::BTreeMap;
 
 pub struct FakeWorldStorage {}
 
@@ -21,11 +16,11 @@ impl IWorldStorage for FakeWorldStorage {
         Ok(None)
     }
 
-    fn load_chunk_data(&self, _chunk_id: Self::PrimaryKey) -> Result<ChunkData, String> {
+    fn read_chunk_data(&self, _chunk_id: Self::PrimaryKey) -> Result<Vec<u8>, String> {
         unimplemented!()
     }
 
-    fn save_chunk_data(&self, _chunk_position: &ChunkPosition, _data: &ChunkData) -> Result<Self::PrimaryKey, String> {
+    fn save_chunk_data(&self, _chunk_position: &ChunkPosition, _data: &Vec<u8>) -> Result<Self::PrimaryKey, String> {
         Ok(())
     }
 

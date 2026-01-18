@@ -8,8 +8,10 @@ use strum_macros::Display;
 pub enum VoxelVisibility {
     /// This voxel should not produce any geometry.
     Empty,
+
     /// Should produce geometry, and also light can pass through.
     Translucent,
+
     /// Light cannot pass through this voxel.
     Opaque,
 }

@@ -1,7 +1,4 @@
-use crate::chunks::{
-    chunk_data::{BlockIndexType, ChunkData},
-    chunk_position::ChunkPosition,
-};
+use crate::chunks::{chunk_data::BlockIndexType, chunk_position::ChunkPosition};
 use std::{collections::BTreeMap, path::PathBuf};
 
 #[derive(Default)]
@@ -30,8 +27,8 @@ pub trait IWorldStorage: Sized {
 
     fn create(world_slug: String, seed: u64, settings: &WorldStorageSettings) -> Result<Self, Self::Error>;
     fn has_chunk_data(&self, chunk_position: &ChunkPosition) -> Result<Option<Self::PrimaryKey>, String>;
-    fn load_chunk_data(&self, chunk_id: Self::PrimaryKey) -> Result<ChunkData, String>;
-    fn save_chunk_data(&self, chunk_position: &ChunkPosition, data: &ChunkData) -> Result<Self::PrimaryKey, String>;
+    fn read_chunk_data(&self, chunk_id: Self::PrimaryKey) -> Result<Vec<u8>, String>;
+    fn save_chunk_data(&self, chunk_position: &ChunkPosition, data: &Vec<u8>) -> Result<Self::PrimaryKey, String>;
     fn delete(&self, settings: &WorldStorageSettings) -> Result<(), String>;
 
     fn scan_worlds(settings: &WorldStorageSettings) -> Result<Vec<WorldInfo>, String>;

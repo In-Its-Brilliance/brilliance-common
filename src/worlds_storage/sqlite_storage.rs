@@ -1,17 +1,12 @@
+use super::taits::{IWorldStorage, WorldInfo, WorldStorageSettings};
+use crate::chunks::{chunk_data::BlockIndexType, chunk_position::ChunkPosition};
+use rusqlite::{blob::ZeroBlob, Connection, DatabaseName, OptionalExtension};
 use std::{
     collections::BTreeMap,
     fs::{create_dir_all, read_dir, remove_file},
     io::{Seek, SeekFrom, Write},
+    path::PathBuf,
 };
-
-use rusqlite::{Connection, DatabaseName, OptionalExtension, blob::ZeroBlob};
-
-use crate::chunks::{
-    chunk_data::{BlockIndexType, ChunkData},
-    chunk_position::ChunkPosition,
-};
-
-use super::taits::{IWorldStorage, WorldInfo, WorldStorageSettings};
 
 const SQL_TABLE_EXISTS: &str = "SELECT EXISTS(SELECT name FROM sqlite_master WHERE type='table' AND name='chunks');";
 
@@ -38,8 +33,19 @@ struct BlockId {
 }
 
 pub struct SQLiteStorage {
-    db: Connection,
+    db_path: PathBuf,
     slug: String,
+}
+
+impl SQLiteStorage {
+    fn open(&self) -> Result<Connection, String> {
+        let conn = Connection::open(&self.db_path).map_err(|e| e.to_string())?;
+
+        conn.execute_batch("PRAGMA journal_mode = WAL;")
+            .map_err(|e| e.to_string())?;
+
+        Ok(conn)
+    }
 }
 
 impl IWorldStorage for SQLiteStorage {
@@ -47,23 +53,23 @@ impl IWorldStorage for SQLiteStorage {
     type PrimaryKey = i64;
 
     fn create(world_slug: String, seed: u64, settings: &WorldStorageSettings) -> Result<Self, String> {
-        let mut path = settings.get_data_path().clone();
-        path.push("worlds");
+        let mut db_path = settings.get_data_path().clone();
+        db_path.push("worlds");
 
-        if create_dir_all(&path).is_err() {
+        if create_dir_all(&db_path).is_err() {
             return Err(format!(
                 "Unable to create dir \"{}\"",
-                path.as_os_str().to_str().unwrap()
+                db_path.as_os_str().to_str().unwrap()
             ));
         }
 
-        path.push(format!("{}.db", world_slug));
-        let path = path.as_os_str();
+        db_path.push(format!("{}.db", world_slug));
 
-        let db = match Connection::open(path) {
-            Ok(c) => c,
-            Err(e) => return Err(format!("Database creation error: {}", e)),
+        let storage = Self {
+            db_path: db_path.clone(),
+            slug: world_slug,
         };
+        let db = storage.open()?;
 
         let chunks_exists: bool = db.query_row(SQL_TABLE_EXISTS, [], |row| row.get(0)).unwrap();
 
@@ -84,18 +90,19 @@ impl IWorldStorage for SQLiteStorage {
                 return Err(format!("World seed save error: &c{}", e));
             }
 
-            log::info!(target: "worlds", "World db &e\"{}\"&r created", path.to_str().unwrap());
+            log::info!(target: "worlds", "World db &e\"{}\"&r created", db_path.as_os_str().to_str().unwrap());
         }
 
-        Ok(Self { db, slug: world_slug })
+        Ok(storage)
     }
 
     fn has_chunk_data(&self, chunk_position: &ChunkPosition) -> Result<Option<Self::PrimaryKey>, String> {
+        let db = self.open()?;
+
         let chunks_exists: rusqlite::Result<i64> =
-            self.db
-                .query_row(SQL_SELECT_CHUNK_ID, (chunk_position.x, chunk_position.z), |row| {
-                    row.get(0)
-                });
+            db.query_row(SQL_SELECT_CHUNK_ID, (chunk_position.x, chunk_position.z), |row| {
+                row.get(0)
+            });
         let r = match chunks_exists.optional() {
             Ok(r) => r,
             Err(e) => {
@@ -105,61 +112,46 @@ impl IWorldStorage for SQLiteStorage {
         return Ok(r);
     }
 
-    fn load_chunk_data(&self, chunk_id: Self::PrimaryKey) -> Result<ChunkData, String> {
-        let blob = self
-            .db
+    fn read_chunk_data(&self, chunk_id: Self::PrimaryKey) -> Result<Vec<u8>, String> {
+        let db = self.open()?;
+        let blob = db
             .blob_open(DatabaseName::Main, "chunks", "sections_data", chunk_id.clone(), true)
             .unwrap();
         let mut encoded = vec![0u8; blob.size() as usize];
         blob.read_at_exact(&mut encoded, 0).unwrap();
-
-        let encoded_len = encoded.len();
-        let sections = match ChunkData::decode_zip(encoded) {
-            Ok(d) => d,
-            Err(e) => {
-                return Err(format!(
-                    "Error: {} (encoded size:{} blob size: {})",
-                    e,
-                    encoded_len,
-                    blob.size()
-                ));
-            }
-        };
-        Ok(sections)
+        Ok(encoded)
     }
 
-    fn save_chunk_data(&self, chunk_position: &ChunkPosition, data: &ChunkData) -> Result<Self::PrimaryKey, String> {
-        let encoded = data.encode_zip();
-
+    fn save_chunk_data(&self, chunk_position: &ChunkPosition, data: &Vec<u8>) -> Result<Self::PrimaryKey, String> {
+        let db = self.open()?;
         let id = match self.has_chunk_data(chunk_position) {
             Ok(id) => id,
             Err(e) => return Err(e),
         };
         let chunk_id = match id {
             Some(id) => {
-                if let Err(e) = self.db.execute(SQL_UPDATE_CHUNK, (&id, ZeroBlob(encoded.len() as i32))) {
+                if let Err(e) = db.execute(SQL_UPDATE_CHUNK, (&id, ZeroBlob(data.len() as i32))) {
                     return Err(format!("Chunk update error: &c{}", e));
                 }
                 id
             }
             None => {
-                if let Err(e) = self.db.execute(
+                if let Err(e) = db.execute(
                     SQL_INSERT_CHUNK,
-                    (chunk_position.x, chunk_position.z, ZeroBlob(encoded.len() as i32)),
+                    (chunk_position.x, chunk_position.z, ZeroBlob(data.len() as i32)),
                 ) {
                     return Err(format!("Chunk insert error: &c{}", e));
                 }
-                let id = self.db.last_insert_rowid();
+                let id = db.last_insert_rowid();
                 id
             }
         };
 
-        let mut blob = self
-            .db
+        let mut blob = db
             .blob_open(DatabaseName::Main, "chunks", "sections_data", chunk_id.clone(), false)
             .unwrap();
-        let bytes_written = blob.write(encoded.as_slice()).unwrap();
-        assert_eq!(encoded.len(), bytes_written);
+        let bytes_written = blob.write(data.as_slice()).unwrap();
+        assert_eq!(data.len(), bytes_written);
         blob.seek(SeekFrom::Start(0)).unwrap();
 
         Ok(chunk_id)
@@ -332,16 +324,22 @@ mod tests {
         assert_eq!(storage.has_chunk_data(&chunk_position).unwrap(), None);
 
         // Save new chunk
-        let chunk_id = storage.save_chunk_data(&chunk_position, &sections).unwrap();
+        let chunk_id = storage
+            .save_chunk_data(&chunk_position, &sections.encode_zip())
+            .unwrap();
         let has_chunk_id = storage.has_chunk_data(&chunk_position).unwrap().unwrap();
         assert_eq!(has_chunk_id, chunk_id);
 
         // Save new chunk
         let sections = generate_chunk(2, &chunk_position);
-        let updated_chunk_id = storage.save_chunk_data(&chunk_position, &sections).unwrap();
+        let updated_chunk_id = storage
+            .save_chunk_data(&chunk_position, &sections.encode_zip())
+            .unwrap();
         assert_eq!(has_chunk_id, updated_chunk_id);
 
-        let loaded_sections = storage.load_chunk_data(has_chunk_id).unwrap();
+        let encoded = storage.read_chunk_data(has_chunk_id).unwrap();
+        let loaded_sections = ChunkData::decode_zip(encoded).unwrap();
+
         assert_eq!(loaded_sections.get(0).unwrap().len(), sections.get(0).unwrap().len());
 
         storage.delete(&settings).unwrap();

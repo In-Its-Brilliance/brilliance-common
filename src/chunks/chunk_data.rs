@@ -151,6 +151,10 @@ impl ChunkData {
         self.data.get(index)
     }
 
+    pub fn len(&self) -> usize {
+        self.data.len()
+    }
+
     pub fn get_block_info(&self, block_position: &BlockPosition) -> Option<BlockDataInfo> {
         let (section, chunk_block_position) = block_position.get_block_position();
         match self.data[section as usize].get(&chunk_block_position) {
