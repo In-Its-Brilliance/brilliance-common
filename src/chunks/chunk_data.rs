@@ -1,6 +1,5 @@
-use crate::{blocks::block_info::BlockFace, VERTICAL_SECTIONS};
+use crate::{blocks::block_info::BlockFace, SECTION_VOLUME, VERTICAL_SECTIONS};
 use serde::{Deserialize, Serialize};
-use std::collections::HashMap;
 
 use super::block_position::{BlockPosition, ChunkBlockPosition};
 
@@ -48,37 +47,46 @@ impl BlockDataInfo {
 }
 
 // Contains all chunk block data
-#[derive(Default, Debug, Serialize, Deserialize, Clone)]
+#[derive(Debug, Serialize, Deserialize, Clone)]
 pub struct ChunkSectionData {
-    data: HashMap<u16, BlockDataInfo>,
+    data: Vec<Option<BlockDataInfo>>,
+}
+
+impl Default for ChunkSectionData {
+    fn default() -> Self {
+        Self {
+            data: vec![None; SECTION_VOLUME],
+        }
+    }
 }
 
 impl ChunkSectionData {
     pub fn change(&mut self, pos: &ChunkBlockPosition, block: Option<BlockDataInfo>) {
-        match block {
-            Some(i) => {
-                self.data.insert(pos.linearize(), i);
-            }
-            None => {
-                self.data.remove(&pos.linearize());
-            }
-        }
-    }
-
-    pub fn iter(&self) -> std::collections::hash_map::Iter<'_, u16, BlockDataInfo> {
-        self.data.iter()
+        let idx = pos.linearize() as usize;
+        self.data[idx] = block;
     }
 
     pub fn insert(&mut self, pos: &ChunkBlockPosition, block: BlockDataInfo) -> Option<BlockDataInfo> {
-        self.data.insert(pos.linearize(), block)
+        let idx = pos.linearize() as usize;
+        let old = self.data[idx];
+        self.data[idx] = Some(block);
+        old
     }
 
     pub fn get(&self, pos: &ChunkBlockPosition) -> Option<&BlockDataInfo> {
-        self.data.get(&pos.linearize())
+        let idx = pos.linearize() as usize;
+        self.data[idx].as_ref()
+    }
+
+    pub fn iter(&self) -> impl Iterator<Item = (usize, &BlockDataInfo)> {
+        self.data
+            .iter()
+            .enumerate()
+            .filter_map(|(i, v)| v.as_ref().map(|b| (i, b)))
     }
 
     pub fn len(&self) -> usize {
-        self.data.len()
+        self.data.iter().filter(|v| v.is_some()).count()
     }
 }
 
@@ -161,10 +169,10 @@ mod tests {
         let chunk_data = generator.generate_chunk_data(&chunk_position);
 
         let encoded = chunk_data.encode();
-        assert_eq!(encoded.len(), 75506);
+        assert_eq!(encoded.len(), 110894);
 
         let encoded = chunk_data.compress();
-        let target_max = 35000;
+        let target_max = 200;
         assert!(
             encoded.len() <= target_max,
             "{}",
