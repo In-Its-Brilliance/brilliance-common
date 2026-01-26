@@ -3007,9 +3007,9 @@ dependencies = [
 ]
 
 [[patch.unused]]
-name = "physics"
+name = "network"
 version = "0.1.0"
 
 [[patch.unused]]
-name = "network"
+name = "physics"
 version = "0.1.0"

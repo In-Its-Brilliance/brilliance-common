@@ -63,7 +63,7 @@ impl Color {
             Color::DarkPurple => "38;2;170;0;170".into(), // #AA00AA
             Color::Gold => "38;2;255;170;0".into(), // #FFAA00
             Color::Gray => "38;2;170;170;170".into(), // #AAAAAA
-            Color::DarkGray => "38;2;85;85;85".into(), // #555555
+            Color::DarkGray => "38;2;120;120;120".into(), // #787878
             Color::Blue => "38;2;85;85;255".into(), // #5555FF
             Color::Green => "38;2;85;255;85".into(), // #55FF55
             Color::Aqua => "38;2;85;255;255".into(), // #55FFFF
@@ -90,7 +90,7 @@ impl Color {
             Color::DarkPurple => "[color=#AA00AA]".into(),
             Color::Gold => "[color=#FFAA00]".into(),
             Color::Gray => "[color=#AAAAAA]".into(),
-            Color::DarkGray => "[color=#555555]".into(),
+            Color::DarkGray => "[color=#787878]".into(),
             Color::Blue => "[color=#5555FF]".into(),
             Color::Green => "[color=#55FF55]".into(),
             Color::Aqua => "[color=#55FFFF]".into(),
@@ -186,7 +186,7 @@ mod tests {
         let r = parse_to_console_godot(&"time: &8main &aINFO&r: text".to_string());
         assert_eq!(
             r,
-            "time: [color=#555555]main [color=#55FF55]INFO[/color]: text[/color]".to_string()
+            "time: [color=#787878]main [color=#55FF55]INFO[/color]: text[/color]".to_string()
         );
     }
 }
