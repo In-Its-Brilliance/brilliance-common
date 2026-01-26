@@ -9,13 +9,13 @@ const TIME_WIDTH: usize = 10;
 
 macro_rules! format_parent {
     () => {
-        "&8├─ &a{name}&r &8│ &2{last}&r &8│ &2{percent:>3.0}%&r &8│ &8avg &2{avg}"
+        "&8├─ &a{name}&r &8├─&2{last}&r &8├─&2{percent:>3.0}%&r &8├─&2{avg} avg"
     };
 }
 
 macro_rules! format_child {
     () => {
-        "&8│  └─ &e{name}&r &8│ &7{last}&r &8│ {percent:>3.0}% &8│ &8avg {avg}"
+        "&8│  └─ &e{name}&r &8│ &7{last}&r &8│ {percent:>3.0}% &8│ {avg} avg"
     };
 }
 
@@ -137,12 +137,12 @@ mod tests {
 
         assert_eq!(
             text,
-            "&8├─ &ab                             &r &8│ &2    30.0ms&r &8│ &2 50%&r &8│ &8avg &2    20.0ms
-&8│  └─ &echild1                     &r &8│ &7    10.0ms&r &8│ 100% &8│ &8avg      6.0ms
-&8├─ &aa                             &r &8│ &2    15.0ms&r &8│ &2 25%&r &8│ &8avg &2    10.0ms
-&8│  └─ &echild1                     &r &8│ &7     6.0ms&r &8│ 100% &8│ &8avg      4.0ms
-&8├─ &ac                             &r &8│ &2    15.0ms&r &8│ &2 25%&r &8│ &8avg &2    10.0ms
-&8│  └─ &echild1                     &r &8│ &7     6.0ms&r &8│ 100% &8│ &8avg      4.0ms",
+            "&8├─ &ab                             &r &8├─&2    30.0ms&r &8├─&2 50%&r &8├─&2    20.0ms avg
+&8│  └─ &echild1                     &r &8│ &7    10.0ms&r &8│ 100% &8│      6.0ms avg
+&8├─ &aa                             &r &8├─&2    15.0ms&r &8├─&2 25%&r &8├─&2    10.0ms avg
+&8│  └─ &echild1                     &r &8│ &7     6.0ms&r &8│ 100% &8│      4.0ms avg
+&8├─ &ac                             &r &8├─&2    15.0ms&r &8├─&2 25%&r &8├─&2    10.0ms avg
+&8│  └─ &echild1                     &r &8│ &7     6.0ms&r &8│ 100% &8│      4.0ms avg",
         );
     }
 }
