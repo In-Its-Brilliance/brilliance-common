@@ -62,7 +62,7 @@ pub fn format_grouped_lines(items: Vec<(&'static str, Duration, Duration)>) -> (
         };
 
         lines.push_str(&format!(
-            "  - &a{name:<NAME_WIDTH_PARENT$}&r - &a{last}&r &2{p:>3.0}% &7(avg {avg})&r",
+            "  - &a{name:<NAME_WIDTH_PARENT$}&r - &a{last}&r &2{p:>3.0}% &8(avg {avg})&r",
             name = cut(root, NAME_WIDTH_PARENT),
             last = fmt_dur(*parent_last),
             p = parent_percent,
@@ -87,7 +87,7 @@ pub fn format_grouped_lines(items: Vec<(&'static str, Duration, Duration)>) -> (
 
             lines.push('\n');
             lines.push_str(&format!(
-                "    > &e{name:<NAME_WIDTH_CHILD$}&r > &8{last}&r {p:>3.0}% &7(avg {avg})&r",
+                "    > &e{name:<NAME_WIDTH_CHILD$}&r > &7{last}&r {p:>3.0}% &8(avg {avg})&r",
                 name = cut(sub_name, NAME_WIDTH_CHILD),
                 last = fmt_dur(*last),
                 p = percent,
@@ -127,12 +127,12 @@ mod tests {
 
         assert_eq!(
             text,
-            "  - &ab                             &r - &a30.0ms&r &2 50% &7(avg 20.0ms)&r
-    > &echild1                        &r > &810.0ms&r 100% &7(avg 6.0ms)&r
-  - &aa                             &r - &a15.0ms&r &2 25% &7(avg 10.0ms)&r
-    > &echild1                        &r > &86.0ms&r 100% &7(avg 4.0ms)&r
-  - &ac                             &r - &a15.0ms&r &2 25% &7(avg 10.0ms)&r
-    > &echild1                        &r > &86.0ms&r 100% &7(avg 4.0ms)&r",
+            "  - &ab                             &r - &a30.0ms&r &2 50% &8(avg 20.0ms)&r
+    > &echild1                        &r > &710.0ms&r 100% &8(avg 6.0ms)&r
+  - &aa                             &r - &a15.0ms&r &2 25% &8(avg 10.0ms)&r
+    > &echild1                        &r > &76.0ms&r 100% &8(avg 4.0ms)&r
+  - &ac                             &r - &a15.0ms&r &2 25% &8(avg 10.0ms)&r
+    > &echild1                        &r > &76.0ms&r 100% &8(avg 4.0ms)&r",
         );
     }
 }

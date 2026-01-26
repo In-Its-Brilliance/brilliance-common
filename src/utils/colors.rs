@@ -55,22 +55,22 @@ impl Color {
     pub fn to_terminal_code(&self) -> Cow<'static, str> {
         match *self {
             Color::Reset => "0".into(),
-            Color::Black => "30".into(),
-            Color::DarkBlue => "34".into(),
-            Color::DarkGreen => "32".into(),
-            Color::DarkAqua => "36".into(),
-            Color::DarkRed => "31".into(),
-            Color::DarkPurple => "35".into(),
-            Color::Gold => "33".into(),
-            Color::Gray => "90".into(),
-            Color::DarkGray => "90".into(),
-            Color::Blue => "94".into(),
-            Color::Green => "92".into(),
-            Color::Aqua => "96".into(),
-            Color::Red => "91".into(),
-            Color::LightPurple => "95".into(),
-            Color::Yellow => "93".into(),
-            Color::White => "97".into(),
+            Color::Black => "38;2;0;0;0".into(), // #000000
+            Color::DarkBlue => "38;2;0;0;170".into(), // #0000AA
+            Color::DarkGreen => "38;2;0;170;0".into(), // #00AA00
+            Color::DarkAqua => "38;2;0;170;170".into(), // #00AAAA
+            Color::DarkRed => "38;2;170;0;0".into(), // #AA0000
+            Color::DarkPurple => "38;2;170;0;170".into(), // #AA00AA
+            Color::Gold => "38;2;255;170;0".into(), // #FFAA00
+            Color::Gray => "38;2;170;170;170".into(), // #AAAAAA
+            Color::DarkGray => "38;2;85;85;85".into(), // #555555
+            Color::Blue => "38;2;85;85;255".into(), // #5555FF
+            Color::Green => "38;2;85;255;85".into(), // #55FF55
+            Color::Aqua => "38;2;85;255;255".into(), // #55FFFF
+            Color::Red => "38;2;255;85;85".into(), // #FF5555
+            Color::LightPurple => "38;2;255;85;255".into(), // #FF55FF
+            Color::Yellow => "38;2;255;255;85".into(), // #FFFF55
+            Color::White => "38;2;255;255;255".into(), // #FFFFFF
         }
     }
 
@@ -82,22 +82,22 @@ impl Color {
     pub fn to_godot_tag(&self) -> Cow<'static, str> {
         match *self {
             Color::Reset => "[/color]".into(),
-            Color::Black => "[color=black]".into(),
-            Color::DarkBlue => "[color=dark_blue]".into(),
-            Color::DarkGreen => "[color=dark_green]".into(),
-            Color::DarkAqua => "[color=dark_aqua]".into(),
-            Color::DarkRed => "[color=dark_red]".into(),
-            Color::DarkPurple => "[color=dark_purple]".into(),
-            Color::Gold => "[color=gold]".into(),
-            Color::Gray => "[color=gray]".into(),
-            Color::DarkGray => "[color=dark_gray]".into(),
-            Color::Blue => "[color=blue]".into(),
-            Color::Green => "[color=green]".into(),
-            Color::Aqua => "[color=aqua]".into(),
-            Color::Red => "[color=red]".into(),
-            Color::LightPurple => "[color=light_purple]".into(),
-            Color::Yellow => "[color=yellow]".into(),
-            Color::White => "[color=white]".into(),
+            Color::Black => "[color=#000000]".into(),
+            Color::DarkBlue => "[color=#0000AA]".into(),
+            Color::DarkGreen => "[color=#00AA00]".into(),
+            Color::DarkAqua => "[color=#00AAAA]".into(),
+            Color::DarkRed => "[color=#AA0000]".into(),
+            Color::DarkPurple => "[color=#AA00AA]".into(),
+            Color::Gold => "[color=#FFAA00]".into(),
+            Color::Gray => "[color=#AAAAAA]".into(),
+            Color::DarkGray => "[color=#555555]".into(),
+            Color::Blue => "[color=#5555FF]".into(),
+            Color::Green => "[color=#55FF55]".into(),
+            Color::Aqua => "[color=#55FFFF]".into(),
+            Color::Red => "[color=#FF5555]".into(),
+            Color::LightPurple => "[color=#FF55FF]".into(),
+            Color::Yellow => "[color=#FFFF55]".into(),
+            Color::White => "[color=#FFFFFF]".into(),
         }
     }
 }
@@ -176,7 +176,7 @@ mod tests {
         let r = parse_to_terminal_colors(&"&5magenta_blue-&1_skeep-\\&2_gold-&6_red-&4_test".to_string());
         assert_eq!(
             r,
-            "\u{1b}[0;35mmagenta_blue-\u{1b}[0;34m_skeep-&2_gold-\u{1b}[0;33m_red-\u{1b}[0;31m_test\u{1b}[0;0m"
+            "\u{1b}[0;38;2;170;0;170mmagenta_blue-\u{1b}[0;38;2;0;0;170m_skeep-&2_gold-\u{1b}[0;38;2;255;170;0m_red-\u{1b}[0;38;2;170;0;0m_test\u{1b}[0;0m"
                 .to_string()
         );
     }
@@ -186,7 +186,7 @@ mod tests {
         let r = parse_to_console_godot(&"time: &8main &aINFO&r: text".to_string());
         assert_eq!(
             r,
-            "time: [color=dark_gray]main [color=green]INFO[/color]: text[/color]".to_string()
+            "time: [color=#555555]main [color=#55FF55]INFO[/color]: text[/color]".to_string()
         );
     }
 }
