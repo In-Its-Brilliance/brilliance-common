@@ -2,7 +2,7 @@ use std::borrow::Cow;
 
 use log::Level;
 
-const COLORS_REGEX: &str = r"(?:&[0-9rabcdef]{1})";
+const COLORS_REGEX: &str = r"(?:&[0-9rabcdefglmops]{1})";
 
 // https://minecraft.fandom.com/wiki/Formatting_codes
 
@@ -24,6 +24,12 @@ pub enum Color {
     LightPurple,
     Yellow,
     White,
+
+    Violet,
+    Magenta,
+    Pink,
+    Coral,
+    Orange,
 }
 
 impl Color {
@@ -46,36 +52,46 @@ impl Color {
             "&d" => Color::LightPurple,
             "&e" => Color::Yellow,
             "&f" => Color::White,
+
+            "&g" => Color::Violet,
+            "&l" => Color::Magenta,
+            "&m" => Color::Pink,
+            "&o" => Color::Coral,
+            "&s" => Color::Orange,
             _ => return None,
         };
-        let color = color;
-        return Some(color);
+        Some(color)
     }
 
     pub fn to_terminal_code(&self) -> Cow<'static, str> {
         match *self {
             Color::Reset => "0".into(),
-            Color::Black => "38;2;0;0;0".into(), // #000000
-            Color::DarkBlue => "38;2;0;0;170".into(), // #0000AA
-            Color::DarkGreen => "38;2;0;170;0".into(), // #00AA00
-            Color::DarkAqua => "38;2;0;170;170".into(), // #00AAAA
-            Color::DarkRed => "38;2;170;0;0".into(), // #AA0000
-            Color::DarkPurple => "38;2;170;0;170".into(), // #AA00AA
-            Color::Gold => "38;2;255;170;0".into(), // #FFAA00
-            Color::Gray => "38;2;170;170;170".into(), // #AAAAAA
-            Color::DarkGray => "38;2;120;120;120".into(), // #787878
-            Color::Blue => "38;2;85;85;255".into(), // #5555FF
-            Color::Green => "38;2;85;255;85".into(), // #55FF55
-            Color::Aqua => "38;2;85;255;255".into(), // #55FFFF
-            Color::Red => "38;2;255;85;85".into(), // #FF5555
-            Color::LightPurple => "38;2;255;85;255".into(), // #FF55FF
-            Color::Yellow => "38;2;255;255;85".into(), // #FFFF55
-            Color::White => "38;2;255;255;255".into(), // #FFFFFF
+            Color::Black => "38;2;0;0;0".into(),           // #000000
+            Color::DarkBlue => "38;2;0;0;170".into(),      // #0000AA
+            Color::DarkGreen => "38;2;0;170;0".into(),     // #00AA00
+            Color::DarkAqua => "38;2;0;170;170".into(),    // #00AAAA
+            Color::DarkRed => "38;2;170;0;0".into(),       // #AA0000
+            Color::DarkPurple => "38;2;170;0;170".into(),  // #AA00AA
+            Color::Gold => "38;2;255;170;0".into(),        // #FFAA00
+            Color::Gray => "38;2;170;170;170".into(),      // #AAAAAA
+            Color::DarkGray => "38;2;120;120;120".into(),  // #787878
+            Color::Blue => "38;2;85;85;255".into(),        // #5555FF
+            Color::Green => "38;2;85;255;85".into(),       // #55FF55
+            Color::Aqua => "38;2;85;255;255".into(),       // #55FFFF
+            Color::Red => "38;2;255;85;85".into(),         // #FF5555
+            Color::LightPurple => "38;2;255;85;255".into(),// #FF55FF
+            Color::Yellow => "38;2;255;255;85".into(),     // #FFFF55
+            Color::White => "38;2;255;255;255".into(),     // #FFFFFF
+
+            Color::Violet => "38;2;138;92;246".into(),     // #8A5CF6
+            Color::Magenta => "38;2;168;85;210".into(),    // #A855D2
+            Color::Pink => "38;2;200;100;170".into(),      // #C864AA
+            Color::Coral => "38;2;235;130;120".into(),     // #EB8278
+            Color::Orange => "38;2;255;170;80".into(),     // #FFAA50
         }
     }
 
     pub fn to_terminal(&self) -> String {
-        //format!("\\e[38;5;{}m", self.to_terminal_code())
         format!("\x1b[0;{}m", self.to_terminal_code())
     }
 
@@ -98,6 +114,12 @@ impl Color {
             Color::LightPurple => "[color=#FF55FF]".into(),
             Color::Yellow => "[color=#FFFF55]".into(),
             Color::White => "[color=#FFFFFF]".into(),
+
+            Color::Violet => "[color=#8A5CF6]".into(),
+            Color::Magenta => "[color=#A855D2]".into(),
+            Color::Pink => "[color=#C864AA]".into(),
+            Color::Coral => "[color=#EB8278]".into(),
+            Color::Orange => "[color=#FFAA50]".into(),
         }
     }
 }
@@ -124,7 +146,7 @@ pub fn parse_to_terminal_colors(origin: &String) -> String {
         result.replace_range(c.start() + offset..c.end() + offset, &replace_str);
         offset += replace_str.len() - c.as_str().len();
     }
-    return format!("{}{}", result, Color::Reset.to_terminal());
+    format!("{}{}", result, Color::Reset.to_terminal())
 }
 
 pub fn parse_to_console_godot(origin: &String) -> String {

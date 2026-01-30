@@ -43,6 +43,11 @@ pub fn split_resource_path(path: &String) -> Option<(String, String)> {
 }
 
 pub fn validate_username(username: &String) -> bool {
+    let len = username.len();
+    if len < 2 || len > 16 {
+        return false;
+    }
+
     let re = regex::Regex::new(r"^[a-zA-Z0-9_]{2,16}$").unwrap();
     re.is_match(username)
 }
@@ -63,4 +68,12 @@ pub fn string_remove_range(s: &str, start: usize, stop: usize) -> String {
         }
     }
     rslt
+}
+
+pub fn print_logo(version: &str) {
+    log::info!(target: "main", "&g▄▄▄▄▄         ▄▄▄▄▄              ▄▄▄▄▄▄▄             ▄▄ ▄▄               {version:>13}");
+    log::info!(target: "main", "&l ███           ███  ██           ███▀▀███▄       ▀▀  ██ ██ ▀▀    Some call it heavenly");
+    log::info!(target: "main", "&m ███  ████▄    ███ ▀██▀▀ ▄█▀▀▀   ███▄▄███▀ ████▄ ██  ██ ██ ██   ▀▀█▄ ████▄ ▄████ ▄█▀█▄");
+    log::info!(target: "main", "&o ███  ██ ██    ███  ██   ▀███▄   ███  ███▄ ██ ▀▀ ██  ██ ██ ██  ▄█▀██ ██ ██ ██    ██▄█▀");
+    log::info!(target: "main", "&s▄███▄ ██ ██   ▄███▄ ██   ▄▄▄█▀   ████████▀ ██    ██▄ ██ ██ ██▄ ▀█▄██ ██ ██ ▀████ ▀█▄▄▄");
 }
