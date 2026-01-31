@@ -1,6 +1,6 @@
 use std::time::Duration;
 
-const PARENTS_LIMIT: usize = 10;
+const PARENTS_LIMIT: usize = 5;
 const CHILDREN_LIMIT: usize = 5;
 
 const NAME_WIDTH: usize = 30;

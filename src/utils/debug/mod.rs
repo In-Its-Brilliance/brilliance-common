@@ -1,6 +1,7 @@
 pub mod format_grouped_lines;
 pub mod runtime_storage;
 pub mod lock;
+pub mod info;
 
 #[cfg(debug_assertions)]
 pub type SmartRwLock<T> = lock::TimedRwLock<T>;

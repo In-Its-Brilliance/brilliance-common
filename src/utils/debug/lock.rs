@@ -36,7 +36,7 @@ impl<T> TimedRwLock<T> {
         let guard = self.inner.read();
         let elapsed = start.elapsed();
         if elapsed > Duration::from_millis(1) {
-            log::warn!(target: "debug", "[{}] read() waited for {:.1?}", self.name, elapsed);
+            log::warn!(target: "debug", "{} &cread()&r waited for &c{:.1?}", self.name, elapsed);
         }
         guard
     }
@@ -53,7 +53,7 @@ impl<T> TimedRwLock<T> {
         let guard = self.inner.write();
         let elapsed = start.elapsed();
         if elapsed > Duration::from_millis(1) {
-            log::warn!(target: "debug", "[{}] write() waited for {:.1?}", self.name, elapsed);
+            log::warn!(target: "debug", "{} &cwrite()&r waited for &c{:.1?}", self.name, elapsed);
         }
         guard
     }

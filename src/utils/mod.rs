@@ -1,7 +1,7 @@
 pub mod block_mesh;
 pub mod colors;
-pub mod spiral_iterator;
 pub mod debug;
+pub mod spiral_iterator;
 
 use std::hash::{DefaultHasher, Hash, Hasher};
 
@@ -30,7 +30,6 @@ pub fn calculate_hash<T: Hash>(obj: T) -> u64 {
     obj.hash(&mut hasher);
     hasher.finish()
 }
-
 
 // Split "test://test/file.glb" into ("test", "test/file.glb")
 pub fn split_resource_path(path: &String) -> Option<(String, String)> {
@@ -76,4 +75,38 @@ pub fn print_logo(version: &str) {
     log::info!(target: "main", "&m ███  ████▄    ███ ▀██▀▀ ▄█▀▀▀   ███▄▄███▀ ████▄ ██  ██ ██ ██   ▀▀█▄ ████▄ ▄████ ▄█▀█▄");
     log::info!(target: "main", "&o ███  ██ ██    ███  ██   ▀███▄   ███  ███▄ ██ ▀▀ ██  ██ ██ ██  ▄█▀██ ██ ██ ██    ██▄█▀");
     log::info!(target: "main", "&s▄███▄ ██ ██   ▄███▄ ██   ▄▄▄█▀   ████████▀ ██    ██▄ ██ ██ ██▄ ▀█▄██ ██ ██ ▀████ ▀█▄▄▄");
+}
+
+pub fn human_number(n: impl Into<i64>) -> String {
+    let n = n.into();
+    let (val, suffix) = match n.abs() {
+        a if a >= 1_000_000 => (n as f64 / 1e6, "M"),
+        a if a >= 1_000 => (n as f64 / 1e3, "k"),
+        _ => return n.to_string(),
+    };
+    
+    if val.fract().abs() < 0.05 {
+        format!("{:.0}{suffix}", val)
+    } else {
+        format!("{:.1}{suffix}", val)
+    }
+}
+
+pub fn humanize_key(key: &str) -> String {
+    const UPPERCASE_WORDS: &[&str] = &["cpu", "gpu", "ram", "vram", "fps", "mb", "kb", "id", "ip", "url", "api"];
+    
+    key.split('_')
+        .map(|word| {
+            if UPPERCASE_WORDS.contains(&word.to_lowercase().as_str()) {
+                word.to_uppercase()
+            } else {
+                let mut chars = word.chars();
+                match chars.next() {
+                    Some(first) => first.to_uppercase().chain(chars).collect(),
+                    None => String::new(),
+                }
+            }
+        })
+        .collect::<Vec<_>>()
+        .join(" ")
 }
