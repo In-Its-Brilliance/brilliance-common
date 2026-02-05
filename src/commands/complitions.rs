@@ -99,7 +99,9 @@ impl CompleteResponse {
 
         let mut complete_response: CompleteResponse = Self::create(request.clone());
 
-        let command_sequence = Command::parse_command(&line[..pos].to_string());
+        let line_to_pos: String = line.chars().take(pos).collect();
+        let command_sequence = Command::parse_command(&line_to_pos);
+
         // Return all command names
         if command_sequence.len() == 0 {
             return complete_response;
@@ -107,9 +109,9 @@ impl CompleteResponse {
         let lead_command = command_sequence[0].clone();
 
         // If typing main command name
-        if pos <= lead_command.len() {
-            let input = line[..pos].to_string();
-            complete_response.set_offset(input.len());
+        if pos <= lead_command.chars().count() {
+            let input: String = line.chars().take(pos).collect();
+            complete_response.set_offset(input.chars().count());
             for command in commands {
                 if let Some(completion) = Completion::generate_completion(&input, command.get_name()) {
                     complete_response.add_completion(completion);

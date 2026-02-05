@@ -12,7 +12,7 @@ pub struct Rotation {
 }
 impl Display for Rotation {
     fn fmt(&self, f: &mut Formatter) -> Result<(), fmt::Error> {
-        write!(f, "yaw:{} pitch:{}", self.yaw, self.pitch)
+        write!(f, "yaw:{:.1} pitch:{:.1}", self.yaw, self.pitch)
     }
 }
 impl PartialEq for Rotation {

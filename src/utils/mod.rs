@@ -1,6 +1,10 @@
+#[cfg(feature = "full")]
 pub mod block_mesh;
+
 pub mod colors;
 pub mod debug;
+
+#[cfg(feature = "full")]
 pub mod spiral_iterator;
 
 use std::hash::{DefaultHasher, Hash, Hasher};

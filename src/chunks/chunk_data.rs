@@ -1,7 +1,7 @@
-use crate::{blocks::block_info::BlockFace, SECTION_VOLUME, VERTICAL_SECTIONS};
+use crate::{blocks::block_info::BlockFace, SECTION_VOLUME};
 use serde::{Deserialize, Serialize};
 
-use super::block_position::{BlockPosition, ChunkBlockPosition};
+use super::block_position::{ChunkBlockPosition};
 
 pub type BlockIndexType = u16;
 
@@ -90,11 +90,13 @@ impl ChunkSectionData {
     }
 }
 
+#[cfg(feature = "zstd")]
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct ChunkData {
     data: Vec<Box<ChunkSectionData>>,
 }
 
+#[cfg(feature = "zstd")]
 impl ChunkData {
     pub fn compress(&self) -> Vec<u8> {
         let raw = self.encode();
@@ -120,8 +122,8 @@ impl ChunkData {
     }
 
     pub fn change_block(&mut self, section: u32, pos: &ChunkBlockPosition, block: Option<BlockDataInfo>) {
-        if section > VERTICAL_SECTIONS as u32 {
-            panic!("Tried to change block in section {section} more than max {VERTICAL_SECTIONS}");
+        if section > crate::VERTICAL_SECTIONS as u32 {
+            panic!("Tried to change block in section {section} more than max {}", crate::VERTICAL_SECTIONS);
         }
 
         self.data[section as usize].change(&pos, block);
@@ -135,7 +137,7 @@ impl ChunkData {
         self.data.len()
     }
 
-    pub fn get_block_info(&self, block_position: &BlockPosition) -> Option<BlockDataInfo> {
+    pub fn get_block_info(&self, block_position: &super::block_position::BlockPosition) -> Option<BlockDataInfo> {
         let (section, chunk_block_position) = block_position.get_block_position();
         match self.data[section as usize].get(&chunk_block_position) {
             Some(b) => Some(b.clone()),
@@ -144,13 +146,14 @@ impl ChunkData {
     }
 
     pub fn push_section(&mut self, data: ChunkSectionData) {
-        if self.data.len() >= VERTICAL_SECTIONS {
-            panic!("Tried to insert sections more than max {VERTICAL_SECTIONS}");
+        if self.data.len() >= crate::VERTICAL_SECTIONS {
+            panic!("Tried to insert sections more than max {}", crate::VERTICAL_SECTIONS);
         }
         self.data.push(Box::new(data));
     }
 }
 
+#[cfg(feature = "full")]
 #[cfg(test)]
 mod tests {
     use crate::{

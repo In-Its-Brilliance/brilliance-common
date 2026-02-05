@@ -1,14 +1,20 @@
 pub mod format_grouped_lines;
 pub mod runtime_storage;
+
+#[cfg(feature = "full")]
 pub mod lock;
+
 pub mod info;
 
+#[cfg(feature = "full")]
 #[cfg(debug_assertions)]
 pub type SmartRwLock<T> = lock::TimedRwLock<T>;
 
+#[cfg(feature = "full")]
 #[cfg(not(debug_assertions))]
 pub type SmartRwLock<T> = parking_lot::RwLock<T>;
 
+#[cfg(feature = "full")]
 #[cfg(debug_assertions)]
 #[macro_export]
 macro_rules! timed_lock {
@@ -17,6 +23,7 @@ macro_rules! timed_lock {
     };
 }
 
+#[cfg(feature = "full")]
 #[cfg(not(debug_assertions))]
 #[macro_export]
 macro_rules! timed_lock {
