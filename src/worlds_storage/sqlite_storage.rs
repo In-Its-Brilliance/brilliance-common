@@ -52,8 +52,8 @@ impl IWorldStorage for SQLiteStorage {
     type Error = String;
     type PrimaryKey = i64;
 
-    fn create(world_slug: String, seed: u64, settings: &WorldStorageSettings) -> Result<Self, String> {
-        let mut db_path = settings.get_data_path().clone();
+    fn create(world_slug: String, world_settings: &WorldStorageSettings) -> Result<Self, String> {
+        let mut db_path = world_settings.get_data_path().clone();
         db_path.push("worlds");
 
         if create_dir_all(&db_path).is_err() {
@@ -86,7 +86,7 @@ impl IWorldStorage for SQLiteStorage {
                 return Err(format!("World info write error: &c{}", e));
             }
 
-            if let Err(e) = db.execute(SQL_SET_SEED, (seed.to_string(),)) {
+            if let Err(e) = db.execute(SQL_SET_SEED, (world_settings.get_seed().to_string(),)) {
                 return Err(format!("World seed save error: &c{}", e));
             }
 
@@ -295,10 +295,10 @@ mod tests {
     use std::env;
 
     use crate::{
-        chunks::{chunk_data::ChunkData, chunk_position::ChunkPosition},
-        world_generator::{
-            default::{WorldGenerator, WorldGeneratorSettings},
-            traits::IWorldGenerator,
+        chunks::{
+            block_position::ChunkBlockPosition,
+            chunk_data::{BlockDataInfo, ChunkData},
+            chunk_position::ChunkPosition,
         },
         worlds_storage::{
             sqlite_storage::SQLiteStorage,
@@ -306,35 +306,38 @@ mod tests {
         },
     };
 
-    fn generate_chunk(seed: u64, chunk_position: &ChunkPosition) -> ChunkData {
-        let generator = WorldGenerator::create(Some(seed), WorldGeneratorSettings::default()).unwrap();
-        generator.generate_chunk_data(&chunk_position)
-    }
-
     #[test]
     fn test_worlds() {
+        let mut sections = ChunkData::default();
+        sections.change_block(
+            0,
+            &ChunkBlockPosition::new(0, 0, 0),
+            Some(BlockDataInfo::create(0, None)),
+        );
+
         let data_path = env::current_dir().unwrap().clone();
-        let settings = WorldStorageSettings::create(data_path);
-        let storage = SQLiteStorage::create("tests".to_string(), 1, &settings).unwrap();
+        let settings = WorldStorageSettings::create(0, data_path);
+        let storage = SQLiteStorage::create("tests".to_string(), &settings).unwrap();
 
         let chunk_position = ChunkPosition::new(0, 0);
-        let sections = generate_chunk(1, &chunk_position);
 
         // Confirm that there is not chunk
         assert_eq!(storage.has_chunk_data(&chunk_position).unwrap(), None);
 
         // Save new chunk
-        let chunk_id = storage
-            .save_chunk_data(&chunk_position, &sections.compress())
-            .unwrap();
+        let chunk_id = storage.save_chunk_data(&chunk_position, &sections.compress()).unwrap();
         let has_chunk_id = storage.has_chunk_data(&chunk_position).unwrap().unwrap();
         assert_eq!(has_chunk_id, chunk_id);
 
         // Save new chunk
-        let sections = generate_chunk(2, &chunk_position);
-        let updated_chunk_id = storage
-            .save_chunk_data(&chunk_position, &sections.compress())
-            .unwrap();
+        let mut sections = ChunkData::default();
+        sections.change_block(
+            0,
+            &ChunkBlockPosition::new(0, 0, 0),
+            Some(BlockDataInfo::create(2, None)),
+        );
+
+        let updated_chunk_id = storage.save_chunk_data(&chunk_position, &sections.compress()).unwrap();
         assert_eq!(has_chunk_id, updated_chunk_id);
 
         let encoded = storage.read_chunk_data(has_chunk_id).unwrap();

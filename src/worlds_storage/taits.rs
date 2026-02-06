@@ -4,15 +4,20 @@ use std::{collections::BTreeMap, path::PathBuf};
 #[derive(Default)]
 pub struct WorldStorageSettings {
     data_path: PathBuf,
+    seed: u64,
 }
 
 impl WorldStorageSettings {
-    pub fn create(data_path: PathBuf) -> Self {
-        Self { data_path }
+    pub fn create(seed: u64, data_path: PathBuf) -> Self {
+        Self { seed, data_path }
     }
 
     pub fn get_data_path(&self) -> &PathBuf {
         &self.data_path
+    }
+
+    pub fn get_seed(&self) -> u64 {
+        self.seed
     }
 }
 
@@ -25,7 +30,7 @@ pub trait IWorldStorage: Sized {
     type Error;
     type PrimaryKey;
 
-    fn create(world_slug: String, seed: u64, settings: &WorldStorageSettings) -> Result<Self, Self::Error>;
+    fn create(world_slug: String, world_settings: &WorldStorageSettings) -> Result<Self, Self::Error>;
     fn has_chunk_data(&self, chunk_position: &ChunkPosition) -> Result<Option<Self::PrimaryKey>, String>;
     fn read_chunk_data(&self, chunk_id: Self::PrimaryKey) -> Result<Vec<u8>, String>;
     fn save_chunk_data(&self, chunk_position: &ChunkPosition, data: &Vec<u8>) -> Result<Self::PrimaryKey, String>;

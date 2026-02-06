@@ -1,7 +1,7 @@
 use crate::{blocks::block_info::BlockFace, SECTION_VOLUME};
 use serde::{Deserialize, Serialize};
 
-use super::block_position::{ChunkBlockPosition};
+use super::block_position::ChunkBlockPosition;
 
 pub type BlockIndexType = u16;
 
@@ -123,7 +123,10 @@ impl ChunkData {
 
     pub fn change_block(&mut self, section: u32, pos: &ChunkBlockPosition, block: Option<BlockDataInfo>) {
         if section > crate::VERTICAL_SECTIONS as u32 {
-            panic!("Tried to change block in section {section} more than max {}", crate::VERTICAL_SECTIONS);
+            panic!(
+                "Tried to change block in section {section} more than max {}",
+                crate::VERTICAL_SECTIONS
+            );
         }
 
         self.data[section as usize].change(&pos, block);
@@ -156,25 +159,24 @@ impl ChunkData {
 #[cfg(feature = "full")]
 #[cfg(test)]
 mod tests {
-    use crate::{
-        chunks::{chunk_data::ChunkData, chunk_position::ChunkPosition},
-        world_generator::{
-            default::{WorldGenerator, WorldGeneratorSettings},
-            traits::IWorldGenerator,
-        },
+    use crate::chunks::{
+        block_position::ChunkBlockPosition,
+        chunk_data::{BlockDataInfo, ChunkData},
     };
 
     #[test]
     fn test_chunks_data() {
-        let generator = WorldGenerator::create(Some(1), WorldGeneratorSettings::default()).unwrap();
+        let mut sections = ChunkData::default();
+        sections.change_block(
+            0,
+            &ChunkBlockPosition::new(0, 0, 0),
+            Some(BlockDataInfo::create(0, None)),
+        );
 
-        let chunk_position = ChunkPosition::new(0, 0);
-        let chunk_data = generator.generate_chunk_data(&chunk_position);
-
-        let encoded = chunk_data.encode();
+        let encoded = sections.encode();
         assert_eq!(encoded.len(), 110894);
 
-        let encoded = chunk_data.compress();
+        let encoded = sections.compress();
         let target_max = 200;
         assert!(
             encoded.len() <= target_max,
@@ -187,9 +189,6 @@ mod tests {
         );
 
         let decoded_chunk_data = ChunkData::decompress(encoded).unwrap();
-        assert_eq!(
-            chunk_data.get(0).unwrap().len(),
-            decoded_chunk_data.get(0).unwrap().len()
-        );
+        assert_eq!(sections.get(0).unwrap().len(), decoded_chunk_data.get(0).unwrap().len());
     }
 }

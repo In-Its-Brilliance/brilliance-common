@@ -8,7 +8,7 @@ impl IWorldStorage for FakeWorldStorage {
     type Error = String;
     type PrimaryKey = ();
 
-    fn create(_world_slug: String, _seed: u64, _settings: &WorldStorageSettings) -> Result<Self, String> {
+    fn create(_world_slug: String, _world_settings: &WorldStorageSettings) -> Result<Self, String> {
         Ok(Self {})
     }
 
