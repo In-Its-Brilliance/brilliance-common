@@ -61,5 +61,5 @@ bracket-random = { version = "0.8.7", optional = true }
 spiral = { version = "0.2", optional = true }
 
 # Plugins
-extism-pdk = { version = "1", optional = true }
+extism-pdk = { version = "1.4", optional = true }
 brilliance-macros = { path = "./macros", optional = true }

@@ -11,23 +11,54 @@ pub fn event_handler(_attr: TokenStream, item: TokenStream) -> TokenStream {
     let fn_inputs = &input_fn.sig.inputs;
     let fn_output = &input_fn.sig.output;
 
-    let event_type = match fn_inputs.first() {
-        Some(FnArg::Typed(pat_type)) => &pat_type.ty,
+    let mut inputs_iter = fn_inputs.iter();
+
+    let (event_pat, event_type) = match inputs_iter.next() {
+        Some(FnArg::Typed(pat_type)) => (&pat_type.pat, &pat_type.ty),
         _ => {
             return syn::Error::new_spanned(
                 &input_fn.sig,
-                "event_handler requires exactly one typed argument",
+                "event_handler requires at least one typed argument",
             )
             .to_compile_error()
             .into();
         }
     };
 
+    let extra_args: Vec<_> = inputs_iter
+        .filter_map(|arg| {
+            if let FnArg::Typed(pat_type) = arg {
+                Some((&pat_type.pat, &pat_type.ty))
+            } else {
+                None
+            }
+        })
+        .collect();
+
+    let extra_lets: Vec<_> = extra_args
+        .iter()
+        .map(|(pat, ty)| {
+            quote! { let #pat: #ty = Default::default(); }
+        })
+        .collect();
+
+    let extra_pats: Vec<_> = extra_args.iter().map(|(pat, _)| pat).collect();
+    let extra_params: Vec<_> = extra_args
+        .iter()
+        .map(|(pat, ty)| quote! { #pat: #ty })
+        .collect();
+
     let has_return = !matches!(fn_output, ReturnType::Default);
+
+    let inner_call = if extra_pats.is_empty() {
+        quote! { __inner_fn(#event_pat) }
+    } else {
+        quote! { __inner_fn(#event_pat, #(#extra_pats),*) }
+    };
 
     let output_handling = if has_return {
         quote! {
-            let __result = __inner_fn(__event);
+            let __result = #inner_call;
             let __output_str = common::serde_json::to_string(&__result)
                 .expect("Failed to serialize return value");
             common::extism_pdk::output(&__output_str)
@@ -35,14 +66,14 @@ pub fn event_handler(_attr: TokenStream, item: TokenStream) -> TokenStream {
         }
     } else {
         quote! {
-            __inner_fn(__event);
+            #inner_call;
         }
     };
 
     let expanded = quote! {
         #[no_mangle]
         #fn_vis extern "C" fn #fn_name() -> i32 {
-            fn __inner_fn(__event: #event_type) #fn_output #fn_block
+            fn __inner_fn(#event_pat: #event_type, #(#extra_params),*) #fn_output #fn_block
 
             let __input: String = match common::extism_pdk::input() {
                 Ok(s) => s,
@@ -52,13 +83,15 @@ pub fn event_handler(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 }
             };
 
-            let __event: #event_type = match common::serde_json::from_str(&__input) {
+            let #event_pat: #event_type = match common::serde_json::from_str(&__input) {
                 Ok(e) => e,
                 Err(e) => {
                     common::extism_pdk::log!(common::extism_pdk::LogLevel::Error, "Deserialize error: {:?}", e);
                     return 2;
                 }
             };
+
+            #(#extra_lets)*
 
             #output_handling
             0

@@ -8,7 +8,7 @@ impl IWorldStorage for FakeWorldStorage {
     type Error = String;
     type PrimaryKey = ();
 
-    fn create(_world_slug: String, _world_settings: &WorldStorageSettings) -> Result<Self, String> {
+    fn create(_storage_settings: WorldStorageSettings, _world_info: &WorldInfo) -> Result<Self, String> {
         Ok(Self {})
     }
 
@@ -24,18 +24,18 @@ impl IWorldStorage for FakeWorldStorage {
         Ok(())
     }
 
-    fn scan_worlds(_settings: &WorldStorageSettings) -> Result<Vec<WorldInfo>, String> {
+    fn scan_worlds(_storage_settings: WorldStorageSettings) -> Result<Vec<WorldInfo>, String> {
         let worlds: Vec<WorldInfo> = Default::default();
         Ok(worlds)
     }
 
-    fn delete(&self, _settings: &WorldStorageSettings) -> Result<(), String> {
+    fn delete(&self) -> Result<(), String> {
         Ok(())
     }
 
     fn validate_block_id_map(
         _world_slug: String,
-        _settings: &WorldStorageSettings,
+        _storage_settings: WorldStorageSettings,
         _block_id_map: &BTreeMap<BlockIndexType, String>,
     ) -> Result<(), String> {
         todo!()
