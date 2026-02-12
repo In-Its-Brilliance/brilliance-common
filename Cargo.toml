@@ -44,6 +44,7 @@ miniz_oxide = "0.8.0"
 ilattice = "0.4.0"
 ndshape = "0.3.0"
 ndcopy = "0.3.0"
+tempfile = "3"
 
 # Optional — не нужны в wasm
 flume = { version = "0.11.0", optional = true }

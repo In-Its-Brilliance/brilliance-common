@@ -1,6 +1,7 @@
 #[cfg(feature = "full")]
 pub mod block_mesh;
 
+pub mod compressable;
 pub mod colors;
 pub mod debug;
 

@@ -1,5 +1,11 @@
-use super::taits::{IWorldStorage, WorldInfo, WorldStorageSettings};
-use crate::chunks::{chunk_data::BlockIndexType, chunk_position::ChunkPosition};
+use super::taits::{IWorldStorage, WorldStorageData, WorldStorageSettings};
+use crate::{
+    chunks::{
+        chunk_data::{BlockIndexType, WorldMacroData},
+        chunk_position::ChunkPosition,
+    },
+    utils::compressable::Compressable,
+};
 use rusqlite::{blob::ZeroBlob, Connection, DatabaseName, OptionalExtension};
 use std::{
     collections::BTreeMap,
@@ -14,9 +20,10 @@ const SQL_CREATE_TABLE: &str =
     "CREATE TABLE IF NOT EXISTS chunks (id INTEGER PRIMARY KEY, x INTEGER, z INTEGER, sections_data BLOB)";
 const SQL_CREATE_INDEX: &str = "CREATE INDEX coordinate_index ON chunks (x, z)";
 
-const SQL_CREATE_INFO_TABLE: &str = "CREATE TABLE IF NOT EXISTS world_info (seed TEXT, world_generator TEXT);";
-const SQL_WORLD_SET_INFO: &str = "INSERT INTO world_info (seed, world_generator) VALUES (?1, ?2)";
-const SQL_READ_WORLD_INFO: &str = "SELECT seed, world_generator FROM world_info;";
+const SQL_CREATE_INFO_TABLE: &str =
+    "CREATE TABLE IF NOT EXISTS world_info (seed TEXT, world_generator TEXT, world_macro BLOB);";
+const SQL_WORLD_SET_INFO: &str = "INSERT INTO world_info (seed, world_generator, world_macro) VALUES (?1, ?2, ?3)";
+const SQL_READ_WORLD_INFO: &str = "SELECT seed, world_generator, world_macro FROM world_info;";
 
 const SQL_SELECT_CHUNK_ID: &str = "SELECT id FROM chunks WHERE x=?1 AND z=?2;";
 const SQL_INSERT_CHUNK: &str = "INSERT INTO chunks (x, z, sections_data) VALUES (?1, ?2, ?3);";
@@ -38,12 +45,16 @@ pub struct SQLiteStorage {
 
 impl SQLiteStorage {
     fn open(&self) -> Result<Connection, String> {
-        let conn = Connection::open(&self.db_path).map_err(|e| e.to_string())?;
+        let conn = Connection::open(&self.get_db_path()).map_err(|e| e.to_string())?;
 
         conn.execute_batch("PRAGMA journal_mode = WAL;")
             .map_err(|e| e.to_string())?;
 
         Ok(conn)
+    }
+
+    fn get_db_path(&self) -> &PathBuf {
+        &self.db_path
     }
 }
 
@@ -51,7 +62,7 @@ impl IWorldStorage for SQLiteStorage {
     type Error = String;
     type PrimaryKey = i64;
 
-    fn create(storage_settings: WorldStorageSettings, world_info: &WorldInfo) -> Result<Self, String> {
+    fn init(storage_settings: WorldStorageSettings, slug: impl Into<String>) -> Result<Self, String> {
         let mut db_path = storage_settings.get_data_path().clone();
         db_path.push("worlds");
 
@@ -62,12 +73,14 @@ impl IWorldStorage for SQLiteStorage {
             ));
         }
 
-        db_path.push(format!("{}.db", world_info.get_slug()));
+        db_path.push(format!("{}.db", slug.into()));
 
-        let storage = Self {
-            db_path: db_path.clone(),
-        };
-        let db = storage.open()?;
+        let storage = Self { db_path };
+        Ok(storage)
+    }
+
+    fn create_new(&self, world_data: &WorldStorageData) -> Result<(), String> {
+        let db = self.open()?;
 
         let chunks_exists: bool = db.query_row(SQL_TABLE_EXISTS, [], |row| row.get(0)).unwrap();
 
@@ -86,15 +99,19 @@ impl IWorldStorage for SQLiteStorage {
 
             if let Err(e) = db.execute(
                 SQL_WORLD_SET_INFO,
-                (world_info.get_seed().to_string(), world_info.get_world_generator()),
+                (
+                    world_data.get_seed().to_string(),
+                    world_data.get_world_generator(),
+                    world_data.get_world_macro_data().encode(),
+                ),
             ) {
                 return Err(format!("world seed saving error: &c{}", e));
             }
 
-            log::info!(target: "worlds", "world db &e\"{}\"&r created", db_path.as_os_str().to_str().unwrap());
+            log::info!(target: "worlds", "world db &e\"{}\"&r created", self.get_db_path().as_os_str().to_str().unwrap());
         }
 
-        Ok(storage)
+        Ok(())
     }
 
     fn has_chunk_data(&self, chunk_position: &ChunkPosition) -> Result<Option<Self::PrimaryKey>, String> {
@@ -158,8 +175,8 @@ impl IWorldStorage for SQLiteStorage {
         Ok(chunk_id)
     }
 
-    fn scan_worlds(storage_settings: WorldStorageSettings) -> Result<Vec<WorldInfo>, String> {
-        let mut worlds: Vec<WorldInfo> = Default::default();
+    fn scan_worlds(storage_settings: WorldStorageSettings) -> Result<Vec<WorldStorageData>, String> {
+        let mut worlds: Vec<WorldStorageData> = Default::default();
 
         let mut folder_path = storage_settings.get_data_path().clone();
         folder_path.push("worlds");
@@ -192,48 +209,45 @@ impl IWorldStorage for SQLiteStorage {
                 Ok(c) => c,
                 Err(e) => return Err(format!("&cdatabase creation error: {}", e)),
             };
-            let (seed, world_generator): (String, String) =
-                match db.query_row(SQL_READ_WORLD_INFO, [], |row| Ok((row.get(0)?, row.get(1)?))) {
-                    Ok(s) => s,
-                    Err(e) => return Err(format!("&cworld &4\"{}\"\n&4World Info SQLite reading error: &c{}", path, e)),
-                };
-            let world_info = WorldInfo::create(
-                filename.replace(".db", ""),
-                Some(seed.parse::<u64>().unwrap()),
-                world_generator,
-            );
-            worlds.push(world_info);
+            let world_data = match db.query_row(SQL_READ_WORLD_INFO, [], |row| {
+                let macro_bytes = row.get::<_, Vec<u8>>(2)?;
+                let macro_data =
+                    WorldMacroData::decode(macro_bytes).map_err(|e| rusqlite::Error::InvalidParameterName(e))?;
+                Ok(WorldStorageData::create(
+                    filename.replace(".db", ""),
+                    row.get::<_, String>(0)?.parse::<u64>().unwrap(),
+                    row.get::<_, String>(1)?,
+                    macro_data,
+                ))
+            }) {
+                Ok(s) => s,
+                Err(e) => {
+                    return Err(format!(
+                        "&cworld &4\"{}\"\n&4World Info SQLite reading error: &c{}",
+                        path, e
+                    ))
+                }
+            };
+            worlds.push(world_data);
         }
 
         Ok(worlds)
     }
 
     fn delete(&self) -> Result<(), String> {
-        if let Err(e) = remove_file(self.db_path.clone()) {
+        if let Err(e) = remove_file(self.get_db_path().clone()) {
             return Err(format!(
                 "world delete &e\"{}\"&r error: {}",
-                self.db_path.as_os_str().to_str().unwrap(),
+                self.get_db_path().as_os_str().to_str().unwrap(),
                 e
             ));
         };
-        log::info!(target: "worlds", "World db &e\"{}\"&r deleted", self.db_path.to_str().unwrap());
+        log::info!(target: "worlds", "World db &e\"{}\"&r deleted", self.get_db_path().to_str().unwrap());
         Ok(())
     }
 
-    fn validate_block_id_map(
-        world_slug: String,
-        storage_settings: WorldStorageSettings,
-        block_id_map: &BTreeMap<BlockIndexType, String>,
-    ) -> Result<(), String> {
-        let mut path = storage_settings.get_data_path().clone();
-        path.push("worlds");
-        path.push(format!("{}.db", world_slug));
-        let path = path.as_os_str();
-
-        let db = match Connection::open(path) {
-            Ok(c) => c,
-            Err(e) => return Err(format!("Database creation error: {}", e)),
-        };
+    fn validate_block_id_map(&self, block_id_map: &BTreeMap<BlockIndexType, String>) -> Result<(), String> {
+        let db = self.open()?;
 
         if let Err(e) = db.execute(SQL_CREATE_TABLE_IDS, ()) {
             return Err(format!("World block ids table create error: &c{}", e));
@@ -293,33 +307,35 @@ impl IWorldStorage for SQLiteStorage {
 
 #[cfg(test)]
 mod tests {
-    use std::env;
-
     use crate::{
         chunks::{
             block_position::ChunkBlockPosition,
-            chunk_data::{BlockDataInfo, ChunkData},
+            chunk_data::{BlockDataInfo, ChunkData, ChunkSectionData},
             chunk_position::ChunkPosition,
         },
+        utils::compressable::Compressable,
         worlds_storage::{
             sqlite_storage::SQLiteStorage,
-            taits::{IWorldStorage, WorldInfo, WorldStorageSettings},
+            taits::{IWorldStorage, WorldStorageData, WorldStorageSettings},
         },
     };
 
     #[test]
     fn test_worlds() {
         let mut sections = ChunkData::default();
+        sections.push_section(ChunkSectionData::default());
         sections.change_block(
             0,
             &ChunkBlockPosition::new(0, 0, 0),
             Some(BlockDataInfo::create(0, None)),
         );
 
-        let data_path = env::current_dir().unwrap().clone();
-        let world_info = WorldInfo::create("test", Some(0), "Default");
-        let storage_settings = WorldStorageSettings::create(data_path);
-        let storage = SQLiteStorage::create(storage_settings, &world_info).unwrap();
+        let storage_data = WorldStorageData::default();
+
+        let storage_settings = WorldStorageSettings::in_memory();
+
+        let storage = SQLiteStorage::init(storage_settings, "default").unwrap();
+        storage.create_new(&storage_data).unwrap();
 
         let chunk_position = ChunkPosition::new(0, 0);
 
@@ -333,6 +349,7 @@ mod tests {
 
         // Save new chunk
         let mut sections = ChunkData::default();
+        sections.push_section(ChunkSectionData::default());
         sections.change_block(
             0,
             &ChunkBlockPosition::new(0, 0, 0),

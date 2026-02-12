@@ -1,4 +1,4 @@
-use crate::{blocks::block_info::BlockFace, SECTION_VOLUME};
+use crate::{blocks::block_info::BlockFace, utils::compressable::Compressable, SECTION_VOLUME};
 use serde::{Deserialize, Serialize};
 
 use super::block_position::ChunkBlockPosition;
@@ -90,37 +90,21 @@ impl ChunkSectionData {
     }
 }
 
-#[cfg(feature = "zstd")]
+#[derive(Default, Debug, Serialize, Deserialize, Clone)]
+pub struct WorldMacroData {
+    data: serde_json::Value,
+}
+
+impl Compressable for WorldMacroData {}
+
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct ChunkData {
     data: Vec<Box<ChunkSectionData>>,
 }
 
-#[cfg(feature = "zstd")]
+impl Compressable for ChunkData {}
+
 impl ChunkData {
-    pub fn compress(&self) -> Vec<u8> {
-        let raw = self.encode();
-        zstd::encode_all(&raw[..], 7).unwrap()
-    }
-
-    pub fn decompress(data: Vec<u8>) -> Result<Self, String> {
-        let raw = zstd::decode_all(&data[..]).map_err(|e| format!("Decompress error: {}", e))?;
-        Self::decode(raw)
-    }
-
-    pub fn encode(&self) -> Vec<u8> {
-        let encoded = bincode::serialize(&self).unwrap();
-        encoded
-    }
-
-    pub fn decode(encoded: Vec<u8>) -> Result<Self, String> {
-        let chunk_data: Self = match bincode::deserialize(&encoded) {
-            Ok(d) => d,
-            Err(e) => return Err(format!("Decode chunk error: &c{} ", e)),
-        };
-        Ok(chunk_data)
-    }
-
     pub fn change_block(&mut self, section: u32, pos: &ChunkBlockPosition, block: Option<BlockDataInfo>) {
         if section > crate::VERTICAL_SECTIONS as u32 {
             panic!(
@@ -128,7 +112,12 @@ impl ChunkData {
                 crate::VERTICAL_SECTIONS
             );
         }
-
+        if section >= self.data.len() as u32 {
+            panic!(
+                "Tried to change block in section {} but only {} sections exist",
+                section, self.data.len()
+            );
+        }
         self.data[section as usize].change(&pos, block);
     }
 
@@ -159,22 +148,31 @@ impl ChunkData {
 #[cfg(feature = "full")]
 #[cfg(test)]
 mod tests {
-    use crate::chunks::{
-        block_position::ChunkBlockPosition,
-        chunk_data::{BlockDataInfo, ChunkData},
+    use crate::{
+        chunks::{
+            block_position::ChunkBlockPosition,
+            chunk_data::{BlockDataInfo, ChunkData, ChunkSectionData},
+        },
+        utils::compressable::Compressable,
     };
 
     #[test]
     fn test_chunks_data() {
         let mut sections = ChunkData::default();
+        sections.push_section(ChunkSectionData::default());
         sections.change_block(
             0,
             &ChunkBlockPosition::new(0, 0, 0),
             Some(BlockDataInfo::create(0, None)),
         );
+        sections.change_block(
+            0,
+            &ChunkBlockPosition::new(1, 1, 1),
+            Some(BlockDataInfo::create(0, None)),
+        );
 
         let encoded = sections.encode();
-        assert_eq!(encoded.len(), 110894);
+        assert_eq!(encoded.len(), 4118);
 
         let encoded = sections.compress();
         let target_max = 200;

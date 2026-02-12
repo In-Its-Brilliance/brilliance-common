@@ -8,8 +8,6 @@ pub mod default_blocks;
 pub mod default_blocks_ids;
 pub mod default_resources;
 pub mod utils;
-
-#[cfg(feature = "full")]
 pub mod world_generator;
 
 #[cfg(feature = "full")]
