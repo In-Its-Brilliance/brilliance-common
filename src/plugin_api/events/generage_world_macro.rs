@@ -1,12 +1,11 @@
 use super::PluginEvent;
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 #[derive(Serialize, Deserialize)]
 pub struct GenerateWorldMacroEvent {
     seed: u64,
     method: String,
-    settings: Option<Value>,
+    settings: Option<serde_yaml::Value>,
 }
 
 impl PluginEvent for GenerateWorldMacroEvent {
@@ -14,9 +13,10 @@ impl PluginEvent for GenerateWorldMacroEvent {
 }
 
 impl GenerateWorldMacroEvent {
-    pub fn create(seed: u64, method: String, settings: Option<Value>) -> Self {
-        Self { seed, method, settings }
+    pub fn create(seed: u64, method: impl Into<String>, settings: Option<serde_yaml::Value>) -> Self {
+        Self { seed, method: method.into(), settings }
     }
+
     pub fn get_seed(&self) -> u64 {
         self.seed
     }
@@ -25,7 +25,7 @@ impl GenerateWorldMacroEvent {
         &self.method
     }
 
-    pub fn get_settings(&self) -> &Option<Value> {
+    pub fn get_settings(&self) -> &Option<serde_yaml::Value> {
         &self.settings
     }
 }

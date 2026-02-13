@@ -327,7 +327,7 @@ mod tests {
         sections.change_block(
             0,
             &ChunkBlockPosition::new(0, 0, 0),
-            Some(BlockDataInfo::create(0, None)),
+            Some(BlockDataInfo::create(0)),
         );
 
         let storage_data = WorldStorageData::default();
@@ -350,11 +350,7 @@ mod tests {
         // Save new chunk
         let mut sections = ChunkData::default();
         sections.push_section(ChunkSectionData::default());
-        sections.change_block(
-            0,
-            &ChunkBlockPosition::new(0, 0, 0),
-            Some(BlockDataInfo::create(2, None)),
-        );
+        sections.change_block(0, &ChunkBlockPosition::new(0, 0, 0), Some(BlockDataInfo::create(2)));
 
         let updated_chunk_id = storage.save_chunk_data(&chunk_position, &sections.compress()).unwrap();
         assert_eq!(has_chunk_id, updated_chunk_id);

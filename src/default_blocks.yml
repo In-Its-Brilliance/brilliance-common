@@ -4,9 +4,16 @@
     side_texture: default://assets/block/grass_block_side.png
     side_overlay: default://assets/block/grass_block_side_overlay.png
     bottom_texture: default://assets/block/dirt.png
-    colors_scheme:
-      - [76, 187, 23]
-  map_color: [76, 187, 23]
+#    colors_scheme:
+#      - [105, 190, 55] # самый светлый
+#      - [95, 196, 46] # тёплый светлый
+#      - [89, 205, 32] # светлый
+#      - [82, 200, 38] # средне-светлый
+#      - [76, 187, 23] # базовый
+#      - [70, 175, 28] # средне-тёмный
+#      - [62, 168, 20] # тёмный
+#      - [58, 160, 15] # тёмно-зелёный
+#  map_color: [105, 190, 55]
 
 - slug: water
   block_content: !texture

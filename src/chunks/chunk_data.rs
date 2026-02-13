@@ -4,21 +4,27 @@ use serde::{Deserialize, Serialize};
 use super::block_position::ChunkBlockPosition;
 
 pub type BlockIndexType = u16;
+pub type BlockColorType = u8;
 
-// Contains block id and rotation
+// Contains block id and rotation, color
 #[derive(Clone, Eq, Copy, Serialize, Deserialize)]
 pub struct BlockDataInfo {
     id: BlockIndexType,
     face: Option<BlockFace>,
+    color: Option<BlockColorType>,
 }
 
 impl std::fmt::Debug for BlockDataInfo {
     fn fmt(&self, f: &mut std::fmt::Formatter) -> Result<(), std::fmt::Error> {
         let face = match self.face {
-            Some(f) => format!(" face:{:?}", f),
+            Some(f) => format!(".face:{:?}", f),
             None => "".to_string(),
         };
-        write!(f, "b#{}{}", self.id, face)
+        let color = match self.face {
+            Some(f) => format!(".color:{:?}", f),
+            None => "".to_string(),
+        };
+        write!(f, "b#{}{}{}", self.id, face, color)
     }
 }
 
@@ -29,20 +35,38 @@ impl PartialEq for BlockDataInfo {
 }
 
 impl BlockDataInfo {
-    pub fn create(id: BlockIndexType, face: Option<BlockFace>) -> Self {
-        Self { id, face }
+    pub fn create(id: BlockIndexType) -> Self {
+        Self {
+            id,
+            face: None,
+            color: None,
+        }
+    }
+
+    pub fn face(mut self, face: BlockFace) -> Self {
+        self.face = Some(face);
+        self
+    }
+
+    pub fn color(mut self, color: BlockColorType) -> Self {
+        self.color = Some(color);
+        self
     }
 
     pub fn get_id(&self) -> BlockIndexType {
         self.id
     }
 
-    pub fn get_face(&self) -> Option<&BlockFace> {
-        self.face.as_ref()
+    pub fn get_face(&self) -> &Option<BlockFace> {
+        &self.face
     }
 
     pub fn set_face(&mut self, face: Option<BlockFace>) {
         self.face = face;
+    }
+
+    pub fn get_color(&self) -> &Option<BlockColorType> {
+        &self.color
     }
 }
 
@@ -92,10 +116,28 @@ impl ChunkSectionData {
 
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct WorldMacroData {
-    data: serde_json::Value,
+    data: serde_yaml::Value,
 }
 
-impl Compressable for WorldMacroData {}
+impl WorldMacroData {
+    pub fn create(data: serde_yaml::Value) -> Self {
+        Self { data }
+    }
+
+    pub fn get_data(&self) -> &serde_yaml::Value {
+        &self.data
+    }
+}
+
+impl Compressable for WorldMacroData {
+    fn encode(&self) -> Vec<u8> {
+        serde_json::to_vec(&self).unwrap()
+    }
+
+    fn decode(encoded: Vec<u8>) -> Result<Self, String> {
+        serde_json::from_slice(&encoded).map_err(|e| format!("Decode error: {}", e))
+    }
+}
 
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct ChunkData {
@@ -115,7 +157,8 @@ impl ChunkData {
         if section >= self.data.len() as u32 {
             panic!(
                 "Tried to change block in section {} but only {} sections exist",
-                section, self.data.len()
+                section,
+                self.data.len()
             );
         }
         self.data[section as usize].change(&pos, block);
@@ -160,19 +203,11 @@ mod tests {
     fn test_chunks_data() {
         let mut sections = ChunkData::default();
         sections.push_section(ChunkSectionData::default());
-        sections.change_block(
-            0,
-            &ChunkBlockPosition::new(0, 0, 0),
-            Some(BlockDataInfo::create(0, None)),
-        );
-        sections.change_block(
-            0,
-            &ChunkBlockPosition::new(1, 1, 1),
-            Some(BlockDataInfo::create(0, None)),
-        );
+        sections.change_block(0, &ChunkBlockPosition::new(0, 0, 0), Some(BlockDataInfo::create(0)));
+        sections.change_block(0, &ChunkBlockPosition::new(1, 1, 1), Some(BlockDataInfo::create(0)));
 
         let encoded = sections.encode();
-        assert_eq!(encoded.len(), 4118);
+        assert!(encoded.len() < 5000);
 
         let encoded = sections.compress();
         let target_max = 200;

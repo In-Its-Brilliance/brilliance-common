@@ -1,5 +1,4 @@
 use serde::{Deserialize, Serialize};
-use serde_json::Value;
 
 use crate::{chunks::{
     chunk_data::{ChunkData, WorldMacroData},
@@ -10,7 +9,7 @@ use crate::{chunks::{
 pub struct WorldGeneratorSettings {
     seed: u64,
     method: String,
-    settings: Option<Value>,
+    settings: Option<serde_yaml::Value>,
     world_macro_data: WorldMacroData,
 }
 
@@ -18,7 +17,7 @@ impl WorldGeneratorSettings {
     pub fn create(
         seed: u64,
         method: impl Into<String>,
-        settings: Option<Value>,
+        settings: Option<serde_yaml::Value>,
         world_macro_data: WorldMacroData,
     ) -> Self {
         Self {
@@ -37,8 +36,12 @@ impl WorldGeneratorSettings {
         &self.method
     }
 
-    pub fn get_settings(&self) -> &Option<Value> {
+    pub fn get_settings(&self) -> &Option<serde_yaml::Value> {
         &self.settings
+    }
+
+    pub fn get_world_macro_data(&self) -> &WorldMacroData {
+        &self.world_macro_data
     }
 }
 

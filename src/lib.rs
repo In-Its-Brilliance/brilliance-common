@@ -1,6 +1,3 @@
-#[cfg(feature = "full")]
-use worlds_storage::sqlite_storage::SQLiteStorage;
-
 pub mod blocks;
 pub mod chunks;
 pub mod commands;
@@ -9,9 +6,10 @@ pub mod default_blocks_ids;
 pub mod default_resources;
 pub mod utils;
 pub mod world_generator;
+pub mod worlds_storage;
 
 #[cfg(feature = "full")]
-pub mod worlds_storage;
+use worlds_storage::sqlite_storage::SQLiteStorage;
 
 #[cfg(feature = "full")]
 pub type WorldStorageManager = SQLiteStorage;
