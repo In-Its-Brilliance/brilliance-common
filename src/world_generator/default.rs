@@ -119,14 +119,14 @@ impl WorldGenerator {
                     let y_global = y as f32 + (vertical_index as f32 * CHUNK_SIZE as f32);
 
                     if y_global < surface - stream {
-                        section_data.insert(&pos, BlockDataInfo::create(BlockID::Grass.id(), None));
+                        section_data.insert(&pos, BlockDataInfo::create(BlockID::Grass.id()));
 
                         if stream > self.settings.sand_threshold {
                             section_data
-                                .insert(&pos, BlockDataInfo::create(BlockID::Sand.id(), None));
+                                .insert(&pos, BlockDataInfo::create(BlockID::Sand.id()));
                         }
                     } else if y_global < surface && y_global < self.settings.water_level {
-                        section_data.insert(&pos, BlockDataInfo::create(BlockID::Water.id(), None));
+                        section_data.insert(&pos, BlockDataInfo::create(BlockID::Water.id()));
                     }
                 }
             }

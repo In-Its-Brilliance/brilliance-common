@@ -1,5 +1,6 @@
 use crate::{blocks::block_info::BlockFace, utils::compressable::Compressable, SECTION_VOLUME};
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 use super::block_position::ChunkBlockPosition;
 
@@ -46,6 +47,16 @@ impl BlockDataInfo {
     pub fn face(mut self, face: BlockFace) -> Self {
         self.face = Some(face);
         self
+    }
+
+    pub fn random_face(self, seed: u64) -> Self {
+        let face = match seed % 4 {
+            0 => BlockFace::East,
+            1 => BlockFace::North,
+            2 => BlockFace::South,
+            _ => BlockFace::West,
+        };
+        self.face(face)
     }
 
     pub fn color(mut self, color: BlockColorType) -> Self {
@@ -141,7 +152,7 @@ impl Compressable for WorldMacroData {
 
 #[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct ChunkData {
-    data: Vec<Box<ChunkSectionData>>,
+    data: Vec<Arc<ChunkSectionData>>,
 }
 
 impl Compressable for ChunkData {}
@@ -161,10 +172,10 @@ impl ChunkData {
                 self.data.len()
             );
         }
-        self.data[section as usize].change(&pos, block);
+        Arc::make_mut(&mut self.data[section as usize]).change(&pos, block);
     }
 
-    pub fn get(&self, index: usize) -> Option<&Box<ChunkSectionData>> {
+    pub fn get(&self, index: usize) -> Option<&Arc<ChunkSectionData>> {
         self.data.get(index)
     }
 
@@ -184,7 +195,7 @@ impl ChunkData {
         if self.data.len() >= crate::VERTICAL_SECTIONS {
             panic!("Tried to insert sections more than max {}", crate::VERTICAL_SECTIONS);
         }
-        self.data.push(Box::new(data));
+        self.data.push(Arc::new(data));
     }
 }
 

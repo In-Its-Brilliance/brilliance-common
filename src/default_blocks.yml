@@ -4,16 +4,16 @@
     side_texture: default://assets/block/grass_block_side.png
     side_overlay: default://assets/block/grass_block_side_overlay.png
     bottom_texture: default://assets/block/dirt.png
-#    colors_scheme:
-#      - [105, 190, 55] # самый светлый
-#      - [95, 196, 46] # тёплый светлый
-#      - [89, 205, 32] # светлый
-#      - [82, 200, 38] # средне-светлый
-#      - [76, 187, 23] # базовый
-#      - [70, 175, 28] # средне-тёмный
-#      - [62, 168, 20] # тёмный
-#      - [58, 160, 15] # тёмно-зелёный
-#  map_color: [105, 190, 55]
+    colors_scheme:
+      - [150, 210, 80] # самый светлый
+      - [120, 195, 50] # тёплый светлый
+      - [95, 180, 35] # светлый
+      - [75, 165, 25] # средне-светлый
+      - [60, 145, 20] # базовый
+      - [45, 125, 15] # средне-тёмный
+      - [35, 105, 12] # тёмный
+      - [30, 85, 10] # тёмно-зелёный
+  map_color: [150, 210, 80]
 
 - slug: water
   block_content: !texture
@@ -94,6 +94,8 @@
   category: trees
 - block_content: !texture
     texture: default://assets/block/acacia_leaves.png
+    colors_scheme:
+      - [168, 199, 96]
   category: trees
 - block_content: !texture
     texture: default://assets/block/acacia_planks.png
@@ -106,6 +108,8 @@
   category: trees
 - block_content: !texture
     texture: default://assets/block/birch_leaves.png
+    colors_scheme:
+      - [130, 197, 71]
   category: trees
 - block_content: !texture
     texture: default://assets/block/birch_planks.png
@@ -118,6 +122,8 @@
   category: trees
 - block_content: !texture
     texture: default://assets/block/dark_oak_leaves.png
+    colors_scheme:
+      - [59, 122, 28]
   category: trees
 - block_content: !texture
     texture: default://assets/block/dark_oak_planks.png
@@ -130,6 +136,8 @@
   category: trees
 - block_content: !texture
     texture: default://assets/block/jungle_leaves.png
+    colors_scheme:
+      - [48, 168, 42]
   category: trees
 - block_content: !texture
     texture: default://assets/block/jungle_planks.png
@@ -142,6 +150,8 @@
   category: trees
 - block_content: !texture
     texture: default://assets/block/oak_leaves.png
+    colors_scheme:
+      - [87, 165, 44]
   category: trees
 - block_content: !texture
     texture: default://assets/block/oak_planks.png
@@ -154,6 +164,8 @@
   category: trees
 - block_content: !texture
     texture: default://assets/block/spruce_leaves.png
+    colors_scheme:
+      - [58, 105, 44]
   category: trees
 - block_content: !texture
     texture: default://assets/block/spruce_planks.png
