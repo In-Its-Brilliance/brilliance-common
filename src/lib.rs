@@ -15,7 +15,7 @@ use worlds_storage::sqlite_storage::SQLiteStorage;
 pub type WorldStorageManager = SQLiteStorage;
 
 /// Целевой тикрейт сервера (тиков в секунду).
-pub const TARGET_TPS: f64 = 20.0;
+pub const TARGET_TPS: f64 = 60.0;
 
 pub const CHUNK_SIZE: u8 = 16_u8;
 pub const CHUNK_SIZE_BOUNDARY: u32 = CHUNK_SIZE as u32 + 2;
