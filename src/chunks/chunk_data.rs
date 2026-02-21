@@ -7,7 +7,13 @@ use super::block_position::ChunkBlockPosition;
 pub type BlockIndexType = u16;
 pub type BlockColorType = u8;
 
-// Contains block id and rotation, color
+/// Represents a placed block instance in the world.
+///
+/// Contains only the data unique to this specific placement:
+/// which block type it is, how it's rotated, and what color it has.
+///
+/// The block type's properties (slug, visibility, content, category)
+/// are defined separately in [`BlockType`](crate::blocks::block_type::BlockType).
 #[derive(Clone, Eq, Copy, Serialize, Deserialize)]
 pub struct BlockDataInfo {
     id: BlockIndexType,

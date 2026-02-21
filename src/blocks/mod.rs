@@ -3,4 +3,4 @@ pub mod voxel_visibility;
 pub mod block_type;
 
 #[cfg(feature = "full")]
-pub mod chunk_collider_info;
+pub mod chunk_shape_info;

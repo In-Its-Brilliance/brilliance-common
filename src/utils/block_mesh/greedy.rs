@@ -234,6 +234,7 @@ where
         VoxelVisibility::Empty => true,
         VoxelVisibility::Translucent => voxel.get_visibility() == VoxelVisibility::Opaque,
         VoxelVisibility::Opaque => false,
+        VoxelVisibility::NonVoxel => true,
     }
 }
 

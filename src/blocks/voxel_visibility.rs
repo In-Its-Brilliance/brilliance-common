@@ -8,12 +8,14 @@ use strum_macros::Display;
 pub enum VoxelVisibility {
     /// This voxel should not produce any geometry.
     Empty,
-
     /// Should produce geometry, and also light can pass through.
     Translucent,
-
     /// Light cannot pass through this voxel.
     Opaque,
+    /// Does not produce voxel geometry and does not hide neighbor faces.
+    /// Used for model-based blocks (foliage, etc.) that have their own visual
+    /// but should not affect voxel mesh generation.
+    NonVoxel,
 }
 
 impl Default for VoxelVisibility {

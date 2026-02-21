@@ -63,4 +63,9 @@ impl<T> TimedRwLock<T> {
     pub fn write(&self) -> RwLockWriteGuard<'_, T> {
         self.inner.write()
     }
+
+    #[inline]
+    pub fn try_write(&self) -> Option<RwLockWriteGuard<'_, T>> {
+        self.inner.try_write()
+    }
 }

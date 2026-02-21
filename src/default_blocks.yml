@@ -5,20 +5,21 @@
     side_overlay: default://assets/block/grass_block_side_overlay.png
     bottom_texture: default://assets/block/dirt.png
     colors_scheme:
-      - [150, 210, 80] # самый светлый
-      - [120, 195, 50] # тёплый светлый
-      - [95, 180, 35] # светлый
-      - [75, 165, 25] # средне-светлый
-      - [60, 145, 20] # базовый
-      - [45, 125, 15] # средне-тёмный
-      - [35, 105, 12] # тёмный
-      - [30, 85, 10] # тёмно-зелёный
+      - [150, 210, 80]
+      - [120, 195, 50]
+      - [95, 180, 35]
+      - [75, 165, 25]
+      - [60, 145, 20]
+      - [45, 125, 15]
+      - [35, 105, 12]
+      - [30, 85, 10]
   map_color: [150, 210, 80]
 
 - slug: water
   block_content: !texture
     texture: default://assets/block/water_overlay.png
-  voxel_visibility: translucent
+    voxel_visibility: translucent
+  collider_type: sensor
 
 - block_content: !texture
     texture: default://assets/block/stone.png
@@ -94,6 +95,7 @@
   category: trees
 - block_content: !texture
     texture: default://assets/block/acacia_leaves.png
+    voxel_visibility: translucent
     colors_scheme:
       - [168, 199, 96]
   category: trees
@@ -108,6 +110,7 @@
   category: trees
 - block_content: !texture
     texture: default://assets/block/birch_leaves.png
+    voxel_visibility: translucent
     colors_scheme:
       - [130, 197, 71]
   category: trees
@@ -122,6 +125,7 @@
   category: trees
 - block_content: !texture
     texture: default://assets/block/dark_oak_leaves.png
+    voxel_visibility: translucent
     colors_scheme:
       - [59, 122, 28]
   category: trees
@@ -136,6 +140,7 @@
   category: trees
 - block_content: !texture
     texture: default://assets/block/jungle_leaves.png
+    voxel_visibility: translucent
     colors_scheme:
       - [48, 168, 42]
   category: trees
@@ -150,6 +155,7 @@
   category: trees
 - block_content: !texture
     texture: default://assets/block/oak_leaves.png
+    voxel_visibility: translucent
     colors_scheme:
       - [87, 165, 44]
   category: trees
@@ -164,6 +170,7 @@
   category: trees
 - block_content: !texture
     texture: default://assets/block/spruce_leaves.png
+    voxel_visibility: translucent
     colors_scheme:
       - [58, 105, 44]
   category: trees
@@ -172,135 +179,116 @@
   category: trees
 
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/bush_small.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/flower_lupin.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/flower_lupin2.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/flower_orchid.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/flower_rose.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/flower_white.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/flower_white2.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/flower_yellow.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/flower_yellow2.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/flower_yellow3.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/grass1.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/grass2.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/grass3.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/grass4.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/ground_moss1.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/ground_moss2.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/ground_moss3.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/tall_grass1.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage
 -
-  voxel_visibility: translucent
   block_content: !model_cube
     model: foliage://assets/resources/foliage/tall_grass2.glb
-    collider_type: sensor
     icon_size: 1.4
+  collider_type: sensor
   category: foliage

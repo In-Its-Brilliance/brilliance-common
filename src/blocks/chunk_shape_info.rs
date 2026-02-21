@@ -2,12 +2,12 @@ use super::voxel_visibility::{Voxel, VoxelVisibility};
 use crate::{chunks::chunk_data::BlockDataInfo, utils::block_mesh::greedy::MergeVoxel};
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
-pub struct ChunkColliderInfo {
+pub struct ChunkShapeInfo {
     voxel_visibility: VoxelVisibility,
     block_info: Option<BlockDataInfo>,
 }
 
-impl ChunkColliderInfo {
+impl ChunkShapeInfo {
     pub fn create(voxel_visibility: VoxelVisibility, block_info: Option<BlockDataInfo>) -> Self {
         Self {
             voxel_visibility,
@@ -16,13 +16,13 @@ impl ChunkColliderInfo {
     }
 }
 
-impl ChunkColliderInfo {
+impl ChunkShapeInfo {
     pub fn get_voxel_visibility(&self) -> &VoxelVisibility {
         &self.voxel_visibility
     }
 }
 
-impl MergeVoxel for ChunkColliderInfo {
+impl MergeVoxel for ChunkShapeInfo {
     type MergeValue = Self;
     type MergeValueFacingNeighbour = Self;
 
@@ -35,7 +35,7 @@ impl MergeVoxel for ChunkColliderInfo {
     }
 }
 
-impl Voxel for ChunkColliderInfo {
+impl Voxel for ChunkShapeInfo {
     fn get_visibility(&self) -> VoxelVisibility {
         self.voxel_visibility.clone()
     }

@@ -66,6 +66,7 @@ pub fn visible_block_faces_with_voxel_view<'a, T, V, S>(
                 VoxelVisibility::Empty => true,
                 VoxelVisibility::Translucent => p_voxel.get_visibility() == VoxelVisibility::Opaque,
                 VoxelVisibility::Opaque => false,
+                VoxelVisibility::NonVoxel => true,
             };
 
             if face_needs_mesh {
