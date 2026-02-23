@@ -6,6 +6,9 @@ pub mod colors;
 pub mod debug;
 
 #[cfg(feature = "full")]
+pub mod events;
+
+#[cfg(feature = "full")]
 pub mod spiral_iterator;
 
 use std::hash::{DefaultHasher, Hash, Hasher};
