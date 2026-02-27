@@ -22,7 +22,6 @@ pub const CHUNK_SIZE_BOUNDARY: u32 = CHUNK_SIZE as u32 + 2;
 pub const SECTION_VOLUME: usize = CHUNK_SIZE as usize * CHUNK_SIZE as usize * CHUNK_SIZE as usize;
 pub const VERTICAL_SECTIONS: usize = 16;
 
-#[cfg(feature = "wasm-plugin")]
 pub mod plugin_api;
 
 #[cfg(feature = "wasm-plugin")]

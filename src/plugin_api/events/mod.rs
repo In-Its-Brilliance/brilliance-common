@@ -1,3 +1,4 @@
+#[cfg(feature = "wasm-plugin")]
 pub mod plugin_load;
 pub mod plugin_unload;
 pub mod generage_chunk;
