@@ -1,7 +1,7 @@
 use crate::{
     chunks::{
         chunk_data::{BlockIndexType, WorldMacroData},
-        chunk_position::ChunkPosition,
+        chunk_position::ChunkPosition, chunk_storage::ChunkStorage,
     },
     utils::srotage_settings::StorageSettings,
 };
@@ -58,8 +58,8 @@ pub trait IWorldStorage: Sized {
     fn create_new(&self, world_info: &WorldStorageData) -> Result<(), String>;
 
     fn has_chunk_data(&self, chunk_position: &ChunkPosition) -> Result<Option<Self::PrimaryKey>, String>;
-    fn read_chunk_data(&self, chunk_id: Self::PrimaryKey) -> Result<Vec<u8>, String>;
-    fn save_chunk_data(&self, chunk_position: &ChunkPosition, data: &Vec<u8>) -> Result<Self::PrimaryKey, String>;
+    fn read_chunk_data(&self, chunk_id: Self::PrimaryKey) -> Result<ChunkStorage, String>;
+    fn save_chunk_data(&self, chunk_position: &ChunkPosition, data: &ChunkStorage) -> Result<Self::PrimaryKey, String>;
     fn delete(&self) -> Result<(), String>;
 
     fn scan_worlds(storage_settings: StorageSettings) -> Result<Vec<WorldStorageData>, String>;

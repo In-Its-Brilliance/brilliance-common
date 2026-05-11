@@ -5,3 +5,17 @@ pub struct Item {
     pub amount: u16,
     pub modifiers: BTreeMap<String, Vec<u8>>,
 }
+
+impl Item {
+    pub fn create(
+        slug: impl Into<String>,
+        amount: u16,
+        modifiers: BTreeMap<String, Vec<u8>>,
+    ) -> Self {
+        Self {
+            slug: slug.into(),
+            amount,
+            modifiers,
+        }
+    }
+}

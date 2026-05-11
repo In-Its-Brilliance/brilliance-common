@@ -4,3 +4,4 @@ pub mod chunk_light;
 pub mod chunk_position;
 pub mod position;
 pub mod rotation;
+pub mod chunk_storage;
