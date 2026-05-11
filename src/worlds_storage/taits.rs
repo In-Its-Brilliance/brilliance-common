@@ -1,8 +1,11 @@
-use crate::chunks::{
-    chunk_data::{BlockIndexType, WorldMacroData},
-    chunk_position::ChunkPosition,
+use crate::{
+    chunks::{
+        chunk_data::{BlockIndexType, WorldMacroData},
+        chunk_position::ChunkPosition,
+    },
+    utils::srotage_settings::StorageSettings,
 };
-use std::{collections::BTreeMap, path::PathBuf};
+use std::collections::BTreeMap;
 
 /// Essential world metadata and generation parameters
 /// required for world creation and chunk generation.
@@ -46,34 +49,11 @@ impl WorldStorageData {
     }
 }
 
-#[derive(Clone)]
-pub struct WorldStorageSettings {
-    data_path: PathBuf,
-}
-
-impl WorldStorageSettings {
-    pub fn from_path(data_path: PathBuf) -> Self {
-        Self { data_path }
-    }
-
-    pub fn in_memory() -> Self {
-        let tmp = tempfile::tempdir().unwrap();
-        let settings = Self {
-            data_path: tmp.path().to_path_buf(),
-        };
-        settings
-    }
-
-    pub fn get_data_path(&self) -> &PathBuf {
-        &self.data_path
-    }
-}
-
 pub trait IWorldStorage: Sized {
     type Error;
     type PrimaryKey;
 
-    fn init(storage_settings: WorldStorageSettings, slug: impl Into<String>) -> Result<Self, Self::Error>;
+    fn init(storage_settings: StorageSettings, slug: impl Into<String>) -> Result<Self, Self::Error>;
 
     fn create_new(&self, world_info: &WorldStorageData) -> Result<(), String>;
 
@@ -82,7 +62,7 @@ pub trait IWorldStorage: Sized {
     fn save_chunk_data(&self, chunk_position: &ChunkPosition, data: &Vec<u8>) -> Result<Self::PrimaryKey, String>;
     fn delete(&self) -> Result<(), String>;
 
-    fn scan_worlds(storage_settings: WorldStorageSettings) -> Result<Vec<WorldStorageData>, String>;
+    fn scan_worlds(storage_settings: StorageSettings) -> Result<Vec<WorldStorageData>, String>;
 
     fn validate_block_id_map(&self, block_id_map: &BTreeMap<BlockIndexType, String>) -> Result<(), String>;
 }

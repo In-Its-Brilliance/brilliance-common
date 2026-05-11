@@ -1,10 +1,10 @@
-use super::taits::{IWorldStorage, WorldStorageData, WorldStorageSettings};
+use super::taits::{IWorldStorage, WorldStorageData};
 use crate::{
     chunks::{
         chunk_data::{BlockIndexType, WorldMacroData},
         chunk_position::ChunkPosition,
     },
-    utils::compressable::Compressable,
+    utils::{compressable::Compressable, srotage_settings::StorageSettings},
 };
 use rusqlite::{blob::ZeroBlob, Connection, DatabaseName, OptionalExtension};
 use std::{
@@ -39,11 +39,11 @@ struct BlockId {
     block_slug: String,
 }
 
-pub struct SQLiteStorage {
+pub struct SQLiteWorldStorage {
     db_path: PathBuf,
 }
 
-impl SQLiteStorage {
+impl SQLiteWorldStorage {
     fn open(&self) -> Result<Connection, String> {
         let conn = Connection::open(&self.get_db_path()).map_err(|e| e.to_string())?;
 
@@ -58,11 +58,11 @@ impl SQLiteStorage {
     }
 }
 
-impl IWorldStorage for SQLiteStorage {
+impl IWorldStorage for SQLiteWorldStorage {
     type Error = String;
     type PrimaryKey = i64;
 
-    fn init(storage_settings: WorldStorageSettings, slug: impl Into<String>) -> Result<Self, String> {
+    fn init(storage_settings: StorageSettings, slug: impl Into<String>) -> Result<Self, String> {
         let mut db_path = storage_settings.get_data_path().clone();
         db_path.push("worlds");
 
@@ -175,7 +175,7 @@ impl IWorldStorage for SQLiteStorage {
         Ok(chunk_id)
     }
 
-    fn scan_worlds(storage_settings: WorldStorageSettings) -> Result<Vec<WorldStorageData>, String> {
+    fn scan_worlds(storage_settings: StorageSettings) -> Result<Vec<WorldStorageData>, String> {
         let mut worlds: Vec<WorldStorageData> = Default::default();
 
         let mut folder_path = storage_settings.get_data_path().clone();
@@ -313,10 +313,10 @@ mod tests {
             chunk_data::{BlockDataInfo, ChunkData, ChunkSectionData},
             chunk_position::ChunkPosition,
         },
-        utils::compressable::Compressable,
+        utils::{compressable::Compressable, srotage_settings::StorageSettings},
         worlds_storage::{
-            sqlite_storage::SQLiteStorage,
-            taits::{IWorldStorage, WorldStorageData, WorldStorageSettings},
+            sqlite_storage::SQLiteWorldStorage,
+            taits::{IWorldStorage, WorldStorageData},
         },
     };
 
@@ -324,17 +324,13 @@ mod tests {
     fn test_worlds() {
         let mut sections = ChunkData::default();
         sections.push_section(ChunkSectionData::default());
-        sections.change_block(
-            0,
-            &ChunkBlockPosition::new(0, 0, 0),
-            Some(BlockDataInfo::create(0)),
-        );
+        sections.change_block(0, &ChunkBlockPosition::new(0, 0, 0), Some(BlockDataInfo::create(0)));
 
         let storage_data = WorldStorageData::default();
 
-        let storage_settings = WorldStorageSettings::in_memory();
+        let storage_settings = StorageSettings::in_memory();
 
-        let storage = SQLiteStorage::init(storage_settings, "default").unwrap();
+        let storage = SQLiteWorldStorage::init(storage_settings, "default").unwrap();
         storage.create_new(&storage_data).unwrap();
 
         let chunk_position = ChunkPosition::new(0, 0);

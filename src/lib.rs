@@ -7,12 +7,18 @@ pub mod default_resources;
 pub mod utils;
 pub mod world_generator;
 pub mod worlds_storage;
+pub mod server_storage;
+pub mod inventory;
+#[cfg(feature = "full")]
+use worlds_storage::sqlite_storage::SQLiteWorldStorage;
+#[cfg(feature = "full")]
+use server_storage::sqlite_storage::SQLiteServerStorage;
 
 #[cfg(feature = "full")]
-use worlds_storage::sqlite_storage::SQLiteStorage;
+pub type WorldStorageManager = SQLiteWorldStorage;
 
 #[cfg(feature = "full")]
-pub type WorldStorageManager = SQLiteStorage;
+pub type ServerStorageManager = SQLiteServerStorage;
 
 /// Целевой тикрейт сервера (тиков в секунду).
 pub const TARGET_TPS: f64 = 64.0;
