@@ -1,5 +1,6 @@
 use std::collections::BTreeMap;
 
+#[derive(Clone)]
 pub struct Item {
     pub slug: String,
     pub amount: u16,

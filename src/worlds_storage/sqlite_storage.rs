@@ -10,11 +10,10 @@ use crate::{
     inventory::{inventory::Inventory, item::Item},
     utils::{compressable::Compressable, srotage_settings::StorageSettings},
 };
-use rusqlite::{blob::ZeroBlob, Connection, DatabaseName, OptionalExtension};
+use rusqlite::{Connection, DatabaseName, OptionalExtension};
 use std::{
     collections::BTreeMap,
     fs::{create_dir_all, read_dir, remove_file},
-    io::{Seek, SeekFrom, Write},
     path::PathBuf,
 };
 
@@ -323,40 +322,38 @@ impl IWorldStorage for SQLiteWorldStorage {
     }
 
     fn save_chunk_data(&self, chunk_position: &ChunkPosition, data: &ChunkStorage) -> Result<Self::PrimaryKey, String> {
-        let db = self.open()?;
-        let id = match self.has_chunk_data(chunk_position) {
-            Ok(id) => id,
-            Err(e) => return Err(e),
-        };
+        let mut db = self.open()?;
+        let tx = db.transaction().map_err(|e| e.to_string())?;
+
+        let chunk_id = tx
+            .query_row(SQL_SELECT_CHUNK_ID, (chunk_position.x, chunk_position.z), |row| {
+                row.get::<_, i64>(0)
+            })
+            .optional()
+            .map_err(|e| e.to_string())?;
 
         let encoded = data.get_chunk_data().compress();
 
-        let chunk_id = match id {
+        let chunk_id = match chunk_id {
             Some(id) => {
-                if let Err(e) = db.execute(SQL_UPDATE_CHUNK, (&id, ZeroBlob(encoded.len() as i32))) {
-                    return Err(format!("&4Chunk update SQLite error: &c{}", e));
-                }
+                tx.execute(SQL_UPDATE_CHUNK, (&id, encoded.as_slice()))
+                    .map_err(|e| format!("&4Chunk update SQLite error: &c{}", e))?;
+
                 id
             }
+
             None => {
-                if let Err(e) = db.execute(
+                tx.execute(
                     SQL_INSERT_CHUNK,
-                    (chunk_position.x, chunk_position.z, ZeroBlob(encoded.len() as i32)),
-                ) {
-                    return Err(format!("&4Chunk insert SQLite error: &c{}", e));
-                }
-                let id = db.last_insert_rowid();
-                id
+                    (chunk_position.x, chunk_position.z, encoded.as_slice()),
+                )
+                .map_err(|e| format!("&4Chunk insert SQLite error: &c{}", e))?;
+
+                tx.last_insert_rowid()
             }
         };
 
-        let mut blob = db
-            .blob_open(DatabaseName::Main, "chunks", "sections_data", chunk_id.clone(), false)
-            .map_err(|e| e.to_string())?;
-
-        let bytes_written = blob.write(encoded.as_slice()).map_err(|e| e.to_string())?;
-        assert_eq!(encoded.len(), bytes_written);
-        blob.seek(SeekFrom::Start(0)).map_err(|e| e.to_string())?;
+        tx.commit().map_err(|e| e.to_string())?;
 
         Ok(chunk_id)
     }

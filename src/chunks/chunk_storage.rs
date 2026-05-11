@@ -2,33 +2,38 @@ use crate::inventory::{inventory::Inventory, item::Item};
 
 use super::{block_position::ChunkBlockPosition, chunk_data::ChunkData, position::Vector3};
 
+#[derive(Clone)]
 pub struct ChunkStorage {
-    world_data: Box<ChunkData>,
+    chunk_data: Box<ChunkData>,
     inventories: Vec<BlockInventory>,
     items: Vec<WorldItem>,
 }
 
 impl ChunkStorage {
-    pub(crate) fn create(world_data: ChunkData) -> Self {
+    pub fn create(chunk_data: ChunkData) -> Self {
         Self {
-            world_data: Box::new(world_data),
+            chunk_data: Box::new(chunk_data),
             inventories: Default::default(),
             items: Default::default(),
         }
     }
 
-    pub(crate) fn inventories(mut self, inventories: Vec<BlockInventory>) -> Self {
+    pub fn inventories(mut self, inventories: Vec<BlockInventory>) -> Self {
         self.inventories = inventories;
         self
     }
 
-    pub(crate) fn items(mut self, items: Vec<WorldItem>) -> Self {
+    pub fn items(mut self, items: Vec<WorldItem>) -> Self {
         self.items = items;
         self
     }
 
-    pub fn get_chunk_data(&self) -> Box<ChunkData> {
-        self.world_data.clone()
+    pub fn get_chunk_data(&self) -> &ChunkData {
+        &self.chunk_data
+    }
+
+    pub fn get_chunk_data_mut(&mut self) -> &mut ChunkData {
+        &mut self.chunk_data
     }
 
     pub fn add_inventory(&mut self, block_inventory: BlockInventory) {
@@ -40,6 +45,7 @@ impl ChunkStorage {
     }
 }
 
+#[derive(Clone)]
 pub struct BlockInventory {
     section: u32,
     position: ChunkBlockPosition,
@@ -52,6 +58,7 @@ impl BlockInventory {
     }
 }
 
+#[derive(Clone)]
 pub struct WorldItem {
     position: Vector3,
     item: Item,
