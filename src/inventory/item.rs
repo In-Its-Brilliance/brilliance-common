@@ -1,6 +1,8 @@
 use std::collections::BTreeMap;
 
-#[derive(Clone)]
+use serde::{Deserialize, Serialize};
+
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct Item {
     pub slug: String,
     pub amount: u16,
@@ -8,11 +10,7 @@ pub struct Item {
 }
 
 impl Item {
-    pub fn create(
-        slug: impl Into<String>,
-        amount: u16,
-        modifiers: BTreeMap<String, Vec<u8>>,
-    ) -> Self {
+    pub fn create(slug: impl Into<String>, amount: u16, modifiers: BTreeMap<String, Vec<u8>>) -> Self {
         Self {
             slug: slug.into(),
             amount,

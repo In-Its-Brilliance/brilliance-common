@@ -1,6 +1,8 @@
+use serde::{Deserialize, Serialize};
+
 use super::item::Item;
 
-#[derive(Default, Clone)]
+#[derive(Default, Clone, Debug, Deserialize, Serialize)]
 pub struct Inventory {
     pub slots: Vec<Option<Item>>,
 }
@@ -8,8 +10,5 @@ pub struct Inventory {
 impl Inventory {
     pub fn create(slots: Vec<Option<Item>>) -> Self {
         Self { slots }
-    }
-
-    pub fn non_empty_slots(&self) {
     }
 }

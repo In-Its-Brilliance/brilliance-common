@@ -1,13 +1,20 @@
-use crate::inventory::{inventory::Inventory, item::Item};
+use serde::{Deserialize, Serialize};
+
+use crate::{
+    inventory::{inventory::Inventory, item::Item},
+    utils::compressable::Compressable,
+};
 
 use super::{block_position::ChunkBlockPosition, chunk_data::ChunkData, position::Vector3};
 
-#[derive(Clone)]
+#[derive(Default, Debug, Serialize, Deserialize, Clone)]
 pub struct ChunkStorage {
     chunk_data: Box<ChunkData>,
     inventories: Vec<BlockInventory>,
     items: Vec<WorldItem>,
 }
+
+impl Compressable for ChunkStorage {}
 
 impl ChunkStorage {
     pub fn create(chunk_data: ChunkData) -> Self {
@@ -45,7 +52,7 @@ impl ChunkStorage {
     }
 }
 
-#[derive(Clone)]
+#[derive(Clone, Debug, Serialize, Deserialize)]
 pub struct BlockInventory {
     section: u32,
     position: ChunkBlockPosition,
@@ -54,11 +61,15 @@ pub struct BlockInventory {
 
 impl BlockInventory {
     pub fn create(section: u32, position: ChunkBlockPosition, inventory: Inventory) -> Self {
-        Self { section, position, inventory }
+        Self {
+            section,
+            position,
+            inventory,
+        }
     }
 }
 
-#[derive(Clone)]
+#[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct WorldItem {
     position: Vector3,
     item: Item,

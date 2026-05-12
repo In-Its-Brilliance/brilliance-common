@@ -1,21 +1,26 @@
+use serde::{Deserialize, Serialize};
+
 use crate::{
     chunks::{
         chunk_data::{BlockIndexType, WorldMacroData},
-        chunk_position::ChunkPosition, chunk_storage::ChunkStorage,
+        chunk_position::ChunkPosition,
+        chunk_storage::ChunkStorage,
     },
-    utils::srotage_settings::StorageSettings,
+    utils::{compressable::Compressable, srotage_settings::StorageSettings},
 };
 use std::collections::BTreeMap;
 
 /// Essential world metadata and generation parameters
 /// required for world creation and chunk generation.
-#[derive(Clone, Default)]
+#[derive(Clone, Default, Serialize, Deserialize)]
 pub struct WorldStorageData {
     slug: String,
     seed: u64,
     world_generator: String,
     world_macro_data: WorldMacroData,
 }
+
+impl Compressable for WorldStorageData {}
 
 impl WorldStorageData {
     pub fn create(

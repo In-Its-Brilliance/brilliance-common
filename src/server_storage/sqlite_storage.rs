@@ -5,7 +5,7 @@ use crate::{inventory::inventory::Inventory, utils::srotage_settings::StorageSet
 use super::taits::{IServerStorage, ServerInventoryOwner};
 
 pub struct SQLiteServerStorage {
-    db_path: PathBuf,
+    _db_path: PathBuf,
 }
 
 impl IServerStorage for SQLiteServerStorage {
@@ -17,23 +17,23 @@ impl IServerStorage for SQLiteServerStorage {
 
         db_path.push("data.db");
 
-        let storage = Self { db_path };
+        let storage = Self { _db_path: db_path };
         Ok(storage)
     }
 
-    fn load_inventories(&self, owner: &ServerInventoryOwner) -> Result<Vec<Inventory>, Self::Error> {
+    fn load_inventories(&self, _owner: &ServerInventoryOwner) -> Result<Vec<Inventory>, Self::Error> {
         todo!()
     }
 
-    fn save_inventory(&self, inventory: &Inventory) -> Result<(), Self::Error> {
+    fn save_inventory(&self, _inventory: &Inventory) -> Result<(), Self::Error> {
         todo!()
     }
 
-    fn create_inventory(&self, owner: &ServerInventoryOwner) -> Result<(), Self::Error> {
+    fn create_inventory(&self, _owner: &ServerInventoryOwner) -> Result<(), Self::Error> {
         todo!()
     }
 
-    fn delete_inventory(&self, inventory: &Inventory) -> Result<(), Self::Error> {
+    fn delete_inventory(&self, _inventory: &Inventory) -> Result<(), Self::Error> {
         todo!()
     }
 

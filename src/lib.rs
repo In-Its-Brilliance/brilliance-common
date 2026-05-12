@@ -10,12 +10,12 @@ pub mod worlds_storage;
 pub mod server_storage;
 pub mod inventory;
 #[cfg(feature = "full")]
-use worlds_storage::sqlite_storage::SQLiteWorldStorage;
+use worlds_storage::{redb_storage::RedbWorldStorage};
 #[cfg(feature = "full")]
 use server_storage::sqlite_storage::SQLiteServerStorage;
 
 #[cfg(feature = "full")]
-pub type WorldStorageManager = SQLiteWorldStorage;
+pub type WorldStorageManager = RedbWorldStorage;
 
 #[cfg(feature = "full")]
 pub type ServerStorageManager = SQLiteServerStorage;
