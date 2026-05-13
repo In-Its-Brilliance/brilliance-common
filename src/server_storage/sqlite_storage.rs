@@ -36,6 +36,4 @@ impl IServerStorage for SQLiteServerStorage {
     fn delete_inventory(&self, _inventory: &Inventory) -> Result<(), Self::Error> {
         todo!()
     }
-
-    
 }
