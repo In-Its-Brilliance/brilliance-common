@@ -24,6 +24,7 @@ const META_WORLD_MACRO_DATA_KEY: &str = "world_macro_data";
 pub struct RedbWorldStorage {
     db_path: PathBuf,
     db: Database,
+    _storage_settings: StorageSettings,
 }
 
 impl RedbWorldStorage {
@@ -37,7 +38,7 @@ impl IWorldStorage for RedbWorldStorage {
     type PrimaryKey = String;
 
     fn init(storage_settings: StorageSettings, slug: impl Into<String>) -> Result<Self, Self::Error> {
-        let mut db_path = storage_settings.get_data_path().clone();
+        let mut db_path = storage_settings.get_data_path().to_path_buf();
 
         db_path.push("worlds");
         create_dir_all(&db_path).map_err(|e| e.to_string())?;
@@ -55,7 +56,11 @@ impl IWorldStorage for RedbWorldStorage {
             write_txn.commit().map_err(|e| e.to_string())?;
         }
 
-        Ok(Self { db_path, db })
+        Ok(Self {
+            db_path,
+            db,
+            _storage_settings: storage_settings,
+        })
     }
 
     fn create_new(&self, world_info: &WorldStorageData) -> Result<(), String> {
@@ -136,7 +141,7 @@ impl IWorldStorage for RedbWorldStorage {
     fn scan_worlds(storage_settings: StorageSettings) -> Result<Vec<WorldStorageData>, String> {
         let mut worlds = Vec::new();
 
-        let mut worlds_path = storage_settings.get_data_path().clone();
+        let mut worlds_path = storage_settings.get_data_path().to_path_buf();
         worlds_path.push("worlds");
 
         create_dir_all(&worlds_path).map_err(|e| e.to_string())?;
@@ -203,5 +208,74 @@ impl IWorldStorage for RedbWorldStorage {
 
     fn validate_block_id_map(&self, _block_id_map: &BTreeMap<BlockIndexType, String>) -> Result<(), String> {
         Ok(())
+    }
+}
+
+#[cfg(test)]
+mod tests {
+    use crate::{
+        chunks::{
+            block_position::ChunkBlockPosition,
+            chunk_data::{BlockDataInfo, ChunkData, ChunkSectionData},
+            chunk_position::ChunkPosition,
+            chunk_storage::{BlockInventory, ChunkStorage},
+        },
+        inventory::inventory::Inventory,
+        utils::srotage_settings::StorageSettings,
+        worlds_storage::{
+            redb_storage::RedbWorldStorage,
+            taits::{IWorldStorage, WorldStorageData},
+        },
+    };
+
+    #[test]
+    fn test_worlds() {
+        let mut sections = ChunkData::default();
+        sections.push_section(ChunkSectionData::default());
+        sections.change_block(0, &ChunkBlockPosition::new(0, 0, 0), Some(BlockDataInfo::create(0)));
+
+        let storage_data = WorldStorageData::default();
+
+        let storage_settings = StorageSettings::in_memory();
+
+        let storage = RedbWorldStorage::init(storage_settings, "default").unwrap();
+        storage.create_new(&storage_data).unwrap();
+
+        let chunk_position = ChunkPosition::new(0, 0);
+
+        // Confirm that there is not chunk
+        assert_eq!(storage.has_chunk_data(&chunk_position).unwrap(), None);
+
+        // Save new chunk
+        let sections = ChunkData::default();
+        let data = ChunkStorage::create(sections);
+        let chunk_id = storage.save_chunk_data(&chunk_position, &data).unwrap();
+        let has_chunk_id = storage.has_chunk_data(&chunk_position).unwrap().unwrap();
+        assert_eq!(has_chunk_id, chunk_id);
+
+        // Save new chunk
+        let mut sections = ChunkData::default();
+        sections.push_section(ChunkSectionData::default());
+        sections.change_block(0, &ChunkBlockPosition::new(0, 0, 0), Some(BlockDataInfo::create(2)));
+
+        let mut data = ChunkStorage::create(sections);
+        data.add_inventory(BlockInventory::create(
+            0,
+            ChunkBlockPosition::new(0, 0, 0),
+            Inventory::default(),
+        ));
+
+        let updated_chunk_id = storage.save_chunk_data(&chunk_position, &data).unwrap();
+        assert_eq!(has_chunk_id, updated_chunk_id);
+
+        let chunk_storage = storage.read_chunk_data(has_chunk_id).unwrap();
+        let loaded_sections = chunk_storage.get_chunk_data();
+
+        assert_eq!(
+            loaded_sections.get(0).unwrap().len(),
+            data.get_chunk_data().get(0).unwrap().len()
+        );
+
+        storage.delete().unwrap();
     }
 }

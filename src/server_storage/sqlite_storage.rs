@@ -13,7 +13,7 @@ impl IServerStorage for SQLiteServerStorage {
     type PrimaryKey = i64;
 
     fn init(storage_settings: StorageSettings) -> Result<Self, String> {
-        let mut db_path = storage_settings.get_data_path().clone();
+        let mut db_path = storage_settings.get_data_path().to_path_buf();
 
         db_path.push("data.db");
 
