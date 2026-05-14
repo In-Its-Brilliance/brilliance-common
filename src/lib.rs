@@ -6,7 +6,9 @@ pub mod default_blocks_ids;
 pub mod default_resources;
 pub mod utils;
 pub mod world_generator;
+#[cfg(feature = "full")]
 pub mod worlds_storage;
+#[cfg(feature = "full")]
 pub mod server_storage;
 pub mod inventory;
 #[cfg(feature = "full")]

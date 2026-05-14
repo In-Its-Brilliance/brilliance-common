@@ -1,9 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{chunks::{
+use crate::chunks::{
     chunk_data::{ChunkData, WorldMacroData},
     chunk_position::ChunkPosition,
-}, worlds_storage::taits::WorldStorageData};
+};
+#[cfg(feature = "full")]
+use crate::worlds_storage::taits::WorldStorageData;
 
 #[derive(Serialize, Deserialize, Clone, Default)]
 pub struct WorldGeneratorSettings {
@@ -45,6 +47,7 @@ impl WorldGeneratorSettings {
     }
 }
 
+#[cfg(feature = "full")]
 impl From<&WorldStorageData> for WorldGeneratorSettings {
     fn from(data: &WorldStorageData) -> Self {
         Self {
