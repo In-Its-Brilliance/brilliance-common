@@ -1,8 +1,8 @@
 #[cfg(feature = "full")]
 pub mod block_mesh;
 
-pub mod compressable;
 pub mod colors;
+pub mod compressable;
 pub mod debug;
 
 #[cfg(feature = "full")]
@@ -95,7 +95,7 @@ pub fn human_number(n: impl Into<i64>) -> String {
         a if a >= 1_000 => (n as f64 / 1e3, "k"),
         _ => return n.to_string(),
     };
-    
+
     if val.fract().abs() < 0.05 {
         format!("{:.0}{suffix}", val)
     } else {
@@ -105,7 +105,7 @@ pub fn human_number(n: impl Into<i64>) -> String {
 
 pub fn humanize_key(key: &str) -> String {
     const UPPERCASE_WORDS: &[&str] = &["cpu", "gpu", "ram", "vram", "fps", "mb", "kb", "id", "ip", "url", "api"];
-    
+
     key.split('_')
         .map(|word| {
             if UPPERCASE_WORDS.contains(&word.to_lowercase().as_str()) {

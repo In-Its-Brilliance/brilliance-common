@@ -15,9 +15,7 @@ impl StorageSettings {
     }
 
     pub fn in_memory() -> Self {
-        let temp_dir = std::sync::Arc::new(
-            tempfile::tempdir().expect("Failed to create temporary storage directory"),
-        );
+        let temp_dir = std::sync::Arc::new(tempfile::tempdir().expect("Failed to create temporary storage directory"));
 
         Self {
             data_path: temp_dir.path().to_path_buf(),

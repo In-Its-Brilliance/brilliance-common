@@ -10,9 +10,7 @@ pub struct RuntimeStorage {
 
 impl RuntimeStorage {
     pub fn new() -> Self {
-        Self {
-            spans: HashMap::new(),
-        }
+        Self { spans: HashMap::new() }
     }
 
     pub fn push(&mut self, name: &'static str, elapsed: Duration) {

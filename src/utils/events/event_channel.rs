@@ -39,7 +39,10 @@ pub struct ChannelReader<T> {
 }
 
 impl<T> EventInterface<T> for EventChannel<T> {
-    type Reader<'a> = ChannelReader<T> where Self: 'a;
+    type Reader<'a>
+        = ChannelReader<T>
+    where
+        Self: 'a;
 
     fn emit_event(&self, event: T) {
         let _ = self.tx.send(event);
@@ -51,7 +54,11 @@ impl<T> EventInterface<T> for EventChannel<T> {
 }
 
 impl<T> EventReader<T> for ChannelReader<T> {
-    type Iter<'a> = flume::Drain<'a, T> where Self: 'a, T: 'a;
+    type Iter<'a>
+        = flume::Drain<'a, T>
+    where
+        Self: 'a,
+        T: 'a;
 
     fn iter_events(&self) -> Self::Iter<'_> {
         self.rx.drain()
@@ -66,7 +73,7 @@ mod tests {
     fn channel_single_consumer() {
         let mut ch = EventChannel::<i32>::default();
         let r = ch.get_reader();
-        
+
         ch.emit_event(1);
         ch.emit_event(2);
 
@@ -83,7 +90,7 @@ mod tests {
         let mut ch = EventChannel::<i32>::default();
         let r1 = ch.get_reader();
         let r2 = ch.get_reader();
-        
+
         ch.emit_event(1);
 
         // Только один получит — это MPMC канал, first come first serve

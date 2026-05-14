@@ -9,7 +9,7 @@ use ndshape::Shape;
 
 use crate::blocks::voxel_visibility::{Voxel, VoxelVisibility};
 
-use super::{OrientedBlockFace, QuadBuffer, UnorientedQuad, bounds::assert_in_bounds};
+use super::{bounds::assert_in_bounds, OrientedBlockFace, QuadBuffer, UnorientedQuad};
 
 pub trait MergeVoxel: Voxel {
     type MergeValue: Eq;

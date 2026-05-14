@@ -1,5 +1,5 @@
-pub mod event_channel;
 pub mod event_broadcast;
+pub mod event_channel;
 
 pub trait EventInterface<T> {
     type Reader<'a>

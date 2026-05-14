@@ -14,7 +14,11 @@ impl PluginEvent for GenerateWorldMacroEvent {
 
 impl GenerateWorldMacroEvent {
     pub fn create(seed: u64, method: impl Into<String>, settings: Option<serde_yaml::Value>) -> Self {
-        Self { seed, method: method.into(), settings }
+        Self {
+            seed,
+            method: method.into(),
+            settings,
+        }
     }
 
     pub fn get_seed(&self) -> u64 {

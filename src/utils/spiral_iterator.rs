@@ -12,7 +12,11 @@ impl SpiralIterator {
     pub fn new(x: i64, y: i64, distance: i64) -> Self {
         let center = ChunkPosition::new(x.clone(), y.clone());
         let iterator = ChebyshevIterator::new(x.clone(), y.clone(), distance.clone());
-        Self { center, distance, iterator }
+        Self {
+            center,
+            distance,
+            iterator,
+        }
     }
 }
 

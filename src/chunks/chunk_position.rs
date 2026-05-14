@@ -1,5 +1,8 @@
 use serde::{Deserialize, Serialize};
-use std::{fmt::{self, Display, Formatter}, ops::Add};
+use std::{
+    fmt::{self, Display, Formatter},
+    ops::Add,
+};
 
 #[derive(Clone, Copy, Debug, Default, Serialize, Deserialize, Hash)]
 pub struct ChunkPosition {

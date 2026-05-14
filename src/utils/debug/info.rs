@@ -114,7 +114,7 @@ impl DebugInfo {
         let col_width: usize = 22;
         let cols = cols.max(1);
         let mut lines = Vec::new();
-        
+
         for chunk in parts.chunks(cols) {
             let line: Vec<String> = chunk
                 .iter()
@@ -130,7 +130,7 @@ impl DebugInfo {
                 .collect();
             lines.push(line.join(" &f|&r "));
         }
-        
+
         lines.join("\n")
     }
 }

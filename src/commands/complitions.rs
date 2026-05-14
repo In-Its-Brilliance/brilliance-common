@@ -178,7 +178,7 @@ pub fn apply_complete(complitions: &CompleteResponse, complition: &Completion) -
 
 #[cfg(test)]
 mod tests {
-    use super::{CompleteRequest, CompleteResponse, Completion, apply_complete};
+    use super::{apply_complete, CompleteRequest, CompleteResponse, Completion};
     use crate::{
         commands::command::{Arg, Command},
         utils::string_remove_range,

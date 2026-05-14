@@ -4,17 +4,17 @@ pub mod commands;
 pub mod default_blocks;
 pub mod default_blocks_ids;
 pub mod default_resources;
+pub mod inventory;
+#[cfg(feature = "full")]
+pub mod server_storage;
 pub mod utils;
 pub mod world_generator;
 #[cfg(feature = "full")]
 pub mod worlds_storage;
 #[cfg(feature = "full")]
-pub mod server_storage;
-pub mod inventory;
-#[cfg(feature = "full")]
-use worlds_storage::{redb_storage::RedbWorldStorage};
-#[cfg(feature = "full")]
 use server_storage::sqlite_storage::SQLiteServerStorage;
+#[cfg(feature = "full")]
+use worlds_storage::redb_storage::RedbWorldStorage;
 
 #[cfg(feature = "full")]
 pub type WorldStorageManager = RedbWorldStorage;

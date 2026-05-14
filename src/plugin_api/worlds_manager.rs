@@ -1,8 +1,5 @@
 use crate::{
-    chunks::{
-        block_position::BlockPosition,
-        chunk_data::BlockDataInfo,
-    },
+    chunks::{block_position::BlockPosition, chunk_data::BlockDataInfo},
     serde_json,
 };
 
@@ -74,7 +71,9 @@ impl ChunksMap {
         let new_block_info_json = serde_json::to_string(&new_block_info)
             .map_err(|e| extism_pdk::Error::msg(format!("Failed to serialize block data: {}", e)))?;
 
-        unsafe { edit_world_block_raw(self.world_slug.clone(), position_json, new_block_info_json)?; }
+        unsafe {
+            edit_world_block_raw(self.world_slug.clone(), position_json, new_block_info_json)?;
+        }
         Ok(())
     }
 }

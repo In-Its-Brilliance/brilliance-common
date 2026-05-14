@@ -22,12 +22,17 @@ impl<T: Default> Default for TimedRwLock<T> {
 impl<T> TimedRwLock<T> {
     #[cfg(debug_assertions)]
     pub fn new(value: T, name: &'static str) -> Self {
-        Self { inner: RwLock::new(value), name }
+        Self {
+            inner: RwLock::new(value),
+            name,
+        }
     }
 
     #[cfg(not(debug_assertions))]
     pub fn new(value: T, _name: &'static str) -> Self {
-        Self { inner: RwLock::new(value) }
+        Self {
+            inner: RwLock::new(value),
+        }
     }
 
     #[cfg(debug_assertions)]

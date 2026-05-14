@@ -1,6 +1,6 @@
 use crate::blocks::voxel_visibility::{IdentityVoxel, Voxel, VoxelVisibility};
 
-use super::{OrientedBlockFace, UnitQuadBuffer, UnorientedUnitQuad, bounds::assert_in_bounds};
+use super::{bounds::assert_in_bounds, OrientedBlockFace, UnitQuadBuffer, UnorientedUnitQuad};
 use ilattice::glam::UVec3;
 use ilattice::prelude::Extent;
 use ndshape::Shape;

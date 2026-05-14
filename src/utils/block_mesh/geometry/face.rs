@@ -181,30 +181,10 @@ impl OrientedBlockFace {
 
         let w = quad.width as f32;
         match (flip_u, flip_v) {
-            (false, false) => [
-                [w, w],
-                [w, 0.0],
-                [0.0, w],
-                [0.0, 0.0],
-            ],
-            (true, false) => [
-                [w, w],
-                [w, 0.0],
-                [0.0, w],
-                [0.0, 0.0],
-            ],
-            (false, true) => [
-                [0.0, w],
-                [w, w],
-                [0.0, 0.0],
-                [w, 0.0],
-            ],
-            (true, true) => [
-                [w, w],
-                [0.0, w],
-                [w, 0.0],
-                [0.0, 0.0],
-            ],
+            (false, false) => [[w, w], [w, 0.0], [0.0, w], [0.0, 0.0]],
+            (true, false) => [[w, w], [w, 0.0], [0.0, w], [0.0, 0.0]],
+            (false, true) => [[0.0, w], [w, w], [0.0, 0.0], [w, 0.0]],
+            (true, true) => [[w, w], [0.0, w], [w, 0.0], [0.0, 0.0]],
         }
     }
 }

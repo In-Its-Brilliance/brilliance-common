@@ -1,5 +1,5 @@
-use strum_macros::EnumIter;
 use strum::IntoEnumIterator;
+use strum_macros::EnumIter;
 
 use crate::chunks::chunk_data::BlockIndexType;
 

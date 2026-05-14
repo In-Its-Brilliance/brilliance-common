@@ -6,9 +6,10 @@ pub trait Compressable: Serialize + Sized {
     }
 
     fn decode(encoded: Vec<u8>) -> Result<Self, String>
-    where Self: DeserializeOwned {
-        bincode::deserialize(&encoded)
-            .map_err(|e| format!("Decode error: {}", e))
+    where
+        Self: DeserializeOwned,
+    {
+        bincode::deserialize(&encoded).map_err(|e| format!("Decode error: {}", e))
     }
 
     #[cfg(feature = "zstd")]
@@ -18,9 +19,10 @@ pub trait Compressable: Serialize + Sized {
 
     #[cfg(feature = "zstd")]
     fn decompress(data: Vec<u8>) -> Result<Self, String>
-    where Self: DeserializeOwned {
-        let raw = zstd::decode_all(&data[..])
-            .map_err(|e| format!("Decompress error: {}", e))?;
+    where
+        Self: DeserializeOwned,
+    {
+        let raw = zstd::decode_all(&data[..]).map_err(|e| format!("Decompress error: {}", e))?;
         Self::decode(raw)
     }
 }
