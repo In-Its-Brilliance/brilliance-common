@@ -163,7 +163,9 @@ mod tests {
             "level": 7,
             "class": "mage"
         });
-        player_data.get_inventory_mut().slots = vec![Some(Item::create("stone", 32, BTreeMap::new()))];
+        player_data
+            .get_inventory_mut()
+            .set_slot(0, Item::create("stone", 32, BTreeMap::new()));
 
         let player_id = storage.save_player_data(&player_data).unwrap();
         assert!(player_id > 0);
@@ -174,12 +176,12 @@ mod tests {
         assert_eq!(saved_player_data.get_username(), "player");
         assert_eq!(saved_player_data.get_json()["level"], 7);
         assert_eq!(saved_player_data.get_json()["class"], "mage");
-        assert_eq!(saved_player_data.get_inventory().slots.len(), 1);
+        assert_eq!(saved_player_data.get_inventory().slots_len(), 1);
         assert!(saved_player_data.get_created_at() > 0);
         assert!(saved_player_data.get_last_login_at() >= saved_player_data.get_created_at());
         assert!(saved_player_data.get_updated_at() >= saved_player_data.get_created_at());
 
-        let saved_item = saved_player_data.get_inventory().slots[0].as_ref().unwrap();
+        let saved_item = saved_player_data.get_inventory().get_slot(0).unwrap();
         assert_eq!(saved_item.slug, "stone");
         assert_eq!(saved_item.amount, 32);
     }
