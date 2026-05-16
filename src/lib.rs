@@ -29,6 +29,7 @@ pub const CHUNK_SIZE: u8 = 16_u8;
 pub const CHUNK_SIZE_BOUNDARY: u32 = CHUNK_SIZE as u32 + 2;
 pub const SECTION_VOLUME: usize = CHUNK_SIZE as usize * CHUNK_SIZE as usize * CHUNK_SIZE as usize;
 pub const VERTICAL_SECTIONS: usize = 16;
+pub const INVENTORY_SLOTS: usize = 8*6;
 
 pub mod plugin_api;
 

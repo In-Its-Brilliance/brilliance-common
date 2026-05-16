@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS players (
 ";
 
 const SQL_SELECT_PLAYER: &str =
-    "SELECT username, json, inventory, created_at, last_login_at, updated_at FROM players WHERE username = ?1;";
+    "SELECT rowid, username, json, inventory, created_at, last_login_at, updated_at FROM players WHERE username = ?1;";
 const SQL_INSERT_PLAYER: &str =
     "INSERT INTO players (username, json, inventory, created_at, last_login_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?5, ?6);";
 const SQL_UPSERT_PLAYER: &str = "
@@ -43,14 +43,16 @@ impl SQLiteServerStorage {
     }
 
     fn read_player(row: &rusqlite::Row<'_>) -> rusqlite::Result<PlayerData> {
-        let username = row.get::<_, String>(0)?;
-        let json = serde_json::from_str::<JsonValue>(&row.get::<_, String>(1)?)
+        let inventory_id = row.get::<_, i64>(0)? as u64;
+        let username = row.get::<_, String>(1)?;
+        let json = serde_json::from_str::<JsonValue>(&row.get::<_, String>(2)?)
             .map_err(|e| rusqlite::Error::InvalidParameterName(e.to_string()))?;
-        let inventory = serde_json::from_str::<Inventory>(&row.get::<_, String>(2)?)
+        let inventory = serde_json::from_str::<Inventory>(&row.get::<_, String>(3)?)
             .map_err(|e| rusqlite::Error::InvalidParameterName(e.to_string()))?;
-        let created_at = row.get::<_, u64>(3)?;
-        let last_login_at = row.get::<_, u64>(4)?;
-        let updated_at = row.get::<_, u64>(5)?;
+        let inventory = inventory.with_id(inventory_id);
+        let created_at = row.get::<_, u64>(4)?;
+        let last_login_at = row.get::<_, u64>(5)?;
+        let updated_at = row.get::<_, u64>(6)?;
 
         Ok(PlayerData::create_with_timestamps(
             username,
@@ -96,7 +98,11 @@ impl IServerStorage for SQLiteServerStorage {
             return Ok(player_data);
         }
 
-        let player_data = PlayerData::create(username, JsonValue::Object(Default::default()), Inventory::default());
+        let mut player_data = PlayerData::create(
+            username,
+            JsonValue::Object(Default::default()),
+            Inventory::create(0).with_id(0),
+        );
         let json = serde_json::to_string(player_data.get_json()).map_err(|e| e.to_string())?;
         let inventory = serde_json::to_string(player_data.get_inventory()).map_err(|e| e.to_string())?;
 
@@ -106,6 +112,32 @@ impl IServerStorage for SQLiteServerStorage {
                 player_data.get_username(),
                 json,
                 inventory,
+                player_data.get_created_at(),
+                player_data.get_last_login_at(),
+                player_data.get_updated_at(),
+            ),
+        )
+        .map_err(|e| e.to_string())?;
+
+        let rowid: i64 = db
+            .query_row(SQL_SELECT_PLAYER_ROWID, (player_data.get_username(),), |row| row.get(0))
+            .map_err(|e| e.to_string())?;
+        let inventory = player_data.get_inventory().clone().with_id(rowid as u64);
+        let inventory_json = serde_json::to_string(&inventory).map_err(|e| e.to_string())?;
+        player_data = PlayerData::create_with_timestamps(
+            player_data.get_username().clone(),
+            player_data.get_json().clone(),
+            inventory,
+            player_data.get_created_at(),
+            player_data.get_last_login_at(),
+            player_data.get_updated_at(),
+        );
+        db.execute(
+            SQL_UPSERT_PLAYER,
+            (
+                player_data.get_username(),
+                serde_json::to_string(player_data.get_json()).map_err(|e| e.to_string())?,
+                inventory_json,
                 player_data.get_created_at(),
                 player_data.get_last_login_at(),
                 player_data.get_updated_at(),
@@ -135,15 +167,21 @@ impl IServerStorage for SQLiteServerStorage {
         )
         .map_err(|e| e.to_string())?;
 
-        db.query_row(SQL_SELECT_PLAYER_ROWID, (player_data.get_username(),), |row| row.get(0))
-            .map_err(|e| e.to_string())
+        let rowid: i64 = db
+            .query_row(SQL_SELECT_PLAYER_ROWID, (player_data.get_username(),), |row| row.get(0))
+            .map_err(|e| e.to_string())?;
+        Ok(rowid)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use crate::{
-        inventory::item::Item,
+        default_blocks_ids::BlockID,
+        inventory::{
+            inventory::Inventory,
+            item::{Item, ItemKind},
+        },
         server_storage::{
             sqlite_storage::SQLiteServerStorage,
             taits::{IServerStorage, PlayerData},
@@ -151,7 +189,6 @@ mod tests {
         utils::srotage_settings::StorageSettings,
     };
     use serde_json::json;
-    use std::collections::BTreeMap;
 
     #[test]
     fn saves_and_loads_player_data_from_temp_storage() {
@@ -165,7 +202,7 @@ mod tests {
         });
         player_data
             .get_inventory_mut()
-            .set_slot(0, Item::create("stone", 32, BTreeMap::new()));
+            .set_slot(0, Item::create(BlockID::Stone).amount(32));
 
         let player_id = storage.save_player_data(&player_data).unwrap();
         assert!(player_id > 0);
@@ -182,14 +219,14 @@ mod tests {
         assert!(saved_player_data.get_updated_at() >= saved_player_data.get_created_at());
 
         let saved_item = saved_player_data.get_inventory().get_slot(0).unwrap();
-        assert_eq!(saved_item.slug, "stone");
-        assert_eq!(saved_item.amount, 32);
+        assert_eq!(*saved_item.get_item_kind(), ItemKind::from(BlockID::Stone));
+        assert_eq!(saved_item.get_amount(), 32);
     }
 
     #[test]
     fn save_player_data_creates_missing_player() {
         let storage = SQLiteServerStorage::init(StorageSettings::in_memory()).unwrap();
-        let player_data = PlayerData::create("new_player", json!({ "level": 1 }), Default::default());
+        let player_data = PlayerData::create("new_player", json!({ "level": 1 }), Inventory::create(0));
 
         storage.save_player_data(&player_data).unwrap();
 

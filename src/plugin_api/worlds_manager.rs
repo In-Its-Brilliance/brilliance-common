@@ -1,5 +1,6 @@
 use crate::{
     chunks::{block_position::BlockPosition, chunk_data::BlockDataInfo},
+    plugin_api::inventory::Inventory,
     serde_json,
 };
 
@@ -9,6 +10,7 @@ extern "ExtismHost" {
     fn has_world_raw(slug: String) -> String;
     fn create_world_raw(slug: String) -> ();
     fn edit_world_block_raw(world_slug: String, position_json: String, new_block_info_json: String) -> ();
+    fn get_or_create_inventory_raw(world_slug: String, position_json: String, slots_count: u64) -> String;
 }
 
 #[derive(Default)]
@@ -75,5 +77,19 @@ impl ChunksMap {
             edit_world_block_raw(self.world_slug.clone(), position_json, new_block_info_json)?;
         }
         Ok(())
+    }
+
+    pub fn get_or_create_inventory(
+        &self,
+        position: BlockPosition,
+        slots_count: usize,
+    ) -> Result<Inventory, extism_pdk::Error> {
+        let position_json = serde_json::to_string(&position)
+            .map_err(|e| extism_pdk::Error::msg(format!("Failed to serialize block position: {}", e)))?;
+        let inventory_id = unsafe { get_or_create_inventory_raw(self.world_slug.clone(), position_json, slots_count as u64)? };
+        let id = inventory_id
+            .parse::<u64>()
+            .map_err(|e| extism_pdk::Error::msg(format!("Invalid inventory id: {}", e)))?;
+        Ok(Inventory::from_id(id))
     }
 }

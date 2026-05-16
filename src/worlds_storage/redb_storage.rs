@@ -227,6 +227,7 @@ mod tests {
             taits::{IWorldStorage, WorldStorageData},
         },
     };
+    use rand::random;
 
     #[test]
     fn test_worlds() {
@@ -262,7 +263,7 @@ mod tests {
         data.add_inventory(BlockInventory::create(
             0,
             ChunkBlockPosition::new(0, 0, 0),
-            Inventory::default(),
+            Inventory::create(0).with_id(random()),
         ));
 
         let updated_chunk_id = storage.save_chunk_data(&chunk_position, &data).unwrap();
