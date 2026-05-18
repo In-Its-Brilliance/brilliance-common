@@ -1,6 +1,10 @@
 use std::{fs::create_dir_all, path::PathBuf};
 
-use crate::{inventory::inventory::Inventory, utils::srotage_settings::StorageSettings};
+use crate::{
+    inventory::inventory::Inventory,
+    utils::srotage_settings::StorageSettings,
+    INVENTORY_SLOTS,
+};
 use rusqlite::{Connection, OptionalExtension};
 use serde_json::Value as JsonValue;
 
@@ -101,7 +105,7 @@ impl IServerStorage for SQLiteServerStorage {
         let mut player_data = PlayerData::create(
             username,
             JsonValue::Object(Default::default()),
-            Inventory::create(0).with_id(0),
+            Inventory::create(INVENTORY_SLOTS).with_id(0),
         );
         let json = serde_json::to_string(player_data.get_json()).map_err(|e| e.to_string())?;
         let inventory = serde_json::to_string(player_data.get_inventory()).map_err(|e| e.to_string())?;
@@ -182,6 +186,7 @@ mod tests {
             inventory::Inventory,
             item::{Item, ItemKind},
         },
+        INVENTORY_SLOTS,
         server_storage::{
             sqlite_storage::SQLiteServerStorage,
             taits::{IServerStorage, PlayerData},
@@ -202,7 +207,7 @@ mod tests {
         });
         player_data
             .get_inventory_mut()
-            .set_slot(0, Item::create(BlockID::Stone).amount(32));
+            .set_slot(0, Item::create(BlockID::Stone.id()).amount(32));
 
         let player_id = storage.save_player_data(&player_data).unwrap();
         assert!(player_id > 0);
@@ -213,20 +218,24 @@ mod tests {
         assert_eq!(saved_player_data.get_username(), "player");
         assert_eq!(saved_player_data.get_json()["level"], 7);
         assert_eq!(saved_player_data.get_json()["class"], "mage");
-        assert_eq!(saved_player_data.get_inventory().slots_len(), 1);
+        assert_eq!(saved_player_data.get_inventory().slots_len(), INVENTORY_SLOTS);
         assert!(saved_player_data.get_created_at() > 0);
         assert!(saved_player_data.get_last_login_at() >= saved_player_data.get_created_at());
         assert!(saved_player_data.get_updated_at() >= saved_player_data.get_created_at());
 
         let saved_item = saved_player_data.get_inventory().get_slot(0).unwrap();
-        assert_eq!(*saved_item.get_item_kind(), ItemKind::from(BlockID::Stone));
+        assert_eq!(*saved_item.get_item_kind(), ItemKind::Block(BlockID::Stone.id()));
         assert_eq!(saved_item.get_amount(), 32);
     }
 
     #[test]
     fn save_player_data_creates_missing_player() {
         let storage = SQLiteServerStorage::init(StorageSettings::in_memory()).unwrap();
-        let player_data = PlayerData::create("new_player", json!({ "level": 1 }), Inventory::create(0));
+        let player_data = PlayerData::create(
+            "new_player",
+            json!({ "level": 1 }),
+            Inventory::create(INVENTORY_SLOTS),
+        );
 
         storage.save_player_data(&player_data).unwrap();
 

@@ -2,6 +2,11 @@ use serde::{Deserialize, Serialize};
 
 use super::item::{ClientItem, Item};
 
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+pub enum InventoryAddItemError {
+    Full,
+}
+
 /// Serves as an index on the client's side
 #[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
 pub enum InventoryType {
@@ -47,6 +52,10 @@ impl Inventory {
         self.slots.len()
     }
 
+    pub fn iter_slots(&self) -> impl Iterator<Item = &Option<Item>> {
+        self.slots.iter()
+    }
+
     pub fn set_slot(&mut self, index: usize, item: Item) {
         if index >= self.slots.len() {
             self.slots.resize_with(index + 1, || None);
@@ -83,9 +92,16 @@ impl Inventory {
         self.slots.swap(a_index, b_index);
     }
 
-    pub fn to_client_inventory(&self) -> ClientInventory {
-        ClientInventory {
-            slots: self.slots.iter().map(|slot| slot.as_ref().map(ClientItem::from)).collect(),
-        }
+    pub fn add_item(
+        &mut self,
+        item: Item,
+        mut emit: impl FnMut(usize, Option<&Item>),
+    ) -> Result<(), InventoryAddItemError> {
+        let Some(slot_index) = self.slots.iter().position(|slot| slot.is_none()) else {
+            return Err(InventoryAddItemError::Full);
+        };
+        self.slots[slot_index] = Some(item);
+        emit(slot_index, self.slots[slot_index].as_ref());
+        Ok(())
     }
 }

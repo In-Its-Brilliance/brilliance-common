@@ -1,6 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-use crate::{plugin_api::player::Player, serde_json};
+use crate::{
+    inventory::{
+        item::Item,
+    },
+    plugin_api::player::Player,
+    serde_json,
+};
 
 #[derive(Clone, Serialize, Deserialize)]
 pub struct OpenInventoryRequest {
@@ -16,25 +22,37 @@ pub struct Inventory {
 #[cfg(feature = "wasm-plugin")]
 #[extism_pdk::host_fn]
 extern "ExtismHost" {
-    fn create_inventory_raw() -> String;
     fn open_inventory_raw(request_json: String) -> ();
+    fn add_inventory_item_raw(inventory_id: u64, item_json: String) -> String;
+}
+
+#[derive(Clone, Debug, Serialize, Deserialize, PartialEq, Eq)]
+pub enum AddItemError {
+    Full,
+    NotFound,
 }
 
 impl Inventory {
-    pub fn create() -> Result<Self, extism_pdk::Error> {
-        let inventory_id = unsafe { create_inventory_raw()? };
-        let id = inventory_id
-            .parse::<u64>()
-            .map_err(|e| extism_pdk::Error::msg(format!("Invalid inventory id: {}", e)))?;
-        Ok(Self { id })
-    }
-
-    pub fn from_id(id: u64) -> Self {
+    pub(crate) fn from_existing_id(id: u64) -> Self {
         Self { id }
     }
 
     pub fn get_id(&self) -> u64 {
         self.id
+    }
+
+    #[cfg(feature = "wasm-plugin")]
+    pub fn add_item(&self, item: Item) -> Result<(), AddItemError> {
+        let item_json = serde_json::to_string(&item)
+            .unwrap_or_else(|e| panic!("Failed to serialize item: {}", e));
+        let response = unsafe { add_inventory_item_raw(self.id, item_json) }
+            .unwrap_or_else(|e| panic!("Failed to add item to inventory: {}", e));
+        match response.as_str() {
+            "ok" => Ok(()),
+            "full" => Err(AddItemError::Full),
+            "not_found" => Err(AddItemError::NotFound),
+            other => panic!("Invalid inventory add item response: {}", other),
+        }
     }
 }
 

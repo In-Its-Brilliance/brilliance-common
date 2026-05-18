@@ -13,7 +13,6 @@ extern "ExtismHost" {
     fn get_or_create_inventory_raw(world_slug: String, position_json: String, slots_count: u64) -> String;
 }
 
-#[derive(Default)]
 pub struct WorldsManager;
 
 #[derive(Clone)]
@@ -27,6 +26,11 @@ pub struct ChunksMap {
 }
 
 impl WorldsManager {
+    pub fn singleton() -> &'static Self {
+        static INSTANCE: WorldsManager = WorldsManager;
+        &INSTANCE
+    }
+
     pub fn has_world(&self, slug: &str) -> Result<bool, extism_pdk::Error> {
         let result = unsafe { has_world_raw(slug.to_string())? };
         Ok(result == "true")
@@ -90,6 +94,6 @@ impl ChunksMap {
         let id = inventory_id
             .parse::<u64>()
             .map_err(|e| extism_pdk::Error::msg(format!("Invalid inventory id: {}", e)))?;
-        Ok(Inventory::from_id(id))
+        Ok(Inventory::from_existing_id(id))
     }
 }

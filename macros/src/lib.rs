@@ -54,7 +54,7 @@ pub fn event_handler(_attr: TokenStream, item: TokenStream) -> TokenStream {
                 Err(e) => {
                     common::extism_pdk::log!(
                         common::extism_pdk::LogLevel::Error,
-                        "Event error: {:?}",
+                        "&4Event error: &o{:?}",
                         e
                     );
                     return 1;
