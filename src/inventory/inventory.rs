@@ -8,7 +8,7 @@ pub enum InventoryAddItemError {
 }
 
 /// Serves as an index on the client's side
-#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq)]
+#[derive(Clone, Debug, Deserialize, Serialize, PartialEq, Eq, Hash)]
 pub enum InventoryType {
     // Player its own inventory
     PlayerPersonal,
@@ -23,6 +23,14 @@ pub enum InventoryType {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ClientInventory {
     pub slots: Vec<Option<ClientItem>>,
+}
+
+impl ClientInventory {
+    pub fn create(slots_count: usize) -> Self {
+        Self {
+            slots: vec![None; slots_count],
+        }
+    }
 }
 
 #[derive(Clone, Debug, Deserialize, Serialize)]

@@ -84,6 +84,7 @@ pub const DEFAULT_RESOURCES: &'static [&'static str] = &[
     "default://assets/block/tall_grass_top.png",
     "default://assets/models/generic/generic.glb",
     "default://assets/gui/textures/elements.png",
+    "default://assets/resources/default/swordsman_skills/icon1.png",
     "foliage://bush_small.glb",
     "foliage://flower_lupin.glb",
     "foliage://flower_lupin2.glb",
