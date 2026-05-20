@@ -6,6 +6,7 @@ const COLORS_REGEX: &str = r"(?:&[0-9a-z]{1})";
 
 // https://minecraft.fandom.com/wiki/Formatting_codes
 
+#[derive(Copy, Clone)]
 pub enum Color {
     Reset,
     Black,
@@ -19,45 +20,161 @@ pub enum Color {
     DarkGray,
     Blue,
     Green,
+    HunterGreen,
     Aqua,
     Red,
     LightPurple,
     Yellow,
     White,
 
+    Thistle,
+    Plum,
     Violet,
     Magenta,
     Pink,
+    Orchid,
+    Fuchsia,
+    MediumOrchid,
+    MediumPurple,
     Coral,
     Orange,
 }
 
 impl Color {
+    pub fn iter() -> impl Iterator<Item = Color> {
+        [
+            Color::Black,
+            Color::DarkRed,
+            Color::Red,
+            Color::Coral,
+            Color::Orange,
+            Color::Gold,
+            Color::Yellow,
+            Color::Green,
+            Color::DarkGreen,
+            Color::HunterGreen,
+            Color::DarkAqua,
+            Color::Aqua,
+            Color::Blue,
+            Color::DarkBlue,
+            Color::LightPurple,
+            Color::DarkPurple,
+            Color::Thistle,
+            Color::Plum,
+            Color::Violet,
+            Color::Magenta,
+            Color::Pink,
+            Color::Orchid,
+            Color::Fuchsia,
+            Color::MediumOrchid,
+            Color::MediumPurple,
+            Color::White,
+            Color::Gray,
+            Color::DarkGray,
+        ]
+        .into_iter()
+    }
+
+    pub fn to_str(&self) -> &'static str {
+        match *self {
+            Color::Reset => "reset",
+            Color::Black => "black",
+            Color::DarkBlue => "dark_blue",
+            Color::DarkGreen => "dark_green",
+            Color::DarkAqua => "dark_aqua",
+            Color::DarkRed => "dark_red",
+            Color::DarkPurple => "dark_purple",
+            Color::Gold => "gold",
+            Color::Gray => "gray",
+            Color::DarkGray => "dark_gray",
+            Color::Blue => "blue",
+            Color::Green => "green",
+            Color::HunterGreen => "hunter_green",
+            Color::Aqua => "aqua",
+            Color::Red => "red",
+            Color::LightPurple => "light_purple",
+            Color::Yellow => "yellow",
+            Color::White => "white",
+            Color::Thistle => "thistle",
+            Color::Plum => "plum",
+            Color::Violet => "violet",
+            Color::Magenta => "magenta",
+            Color::Pink => "pink",
+            Color::Orchid => "orchid",
+            Color::Fuchsia => "fuchsia",
+            Color::MediumOrchid => "medium_orchid",
+            Color::MediumPurple => "medium_purple",
+            Color::Coral => "coral",
+            Color::Orange => "orange",
+        }
+    }
+
+    pub fn to_code(&self) -> &'static str {
+        match *self {
+            Color::Reset => "&r",
+            Color::Black => "&0",
+            Color::DarkBlue => "&1",
+            Color::DarkGreen => "&2",
+            Color::DarkAqua => "&3",
+            Color::DarkRed => "&4",
+            Color::DarkPurple => "&5",
+            Color::Gold => "&6",
+            Color::Gray => "&7",
+            Color::DarkGray => "&8",
+            Color::Blue => "&9",
+            Color::Green => "&a",
+            Color::Aqua => "&b",
+            Color::Red => "&c",
+            Color::LightPurple => "&d",
+            Color::Yellow => "&e",
+            Color::White => "&f",
+            Color::Violet => "&g",
+            Color::HunterGreen => "&h",
+            Color::Magenta => "&l",
+            Color::Pink => "&m",
+            Color::Coral => "&o",
+            Color::Orange => "&s",
+            Color::Thistle => "&p",
+            Color::Plum => "&q",
+            Color::Orchid => "&u",
+            Color::Fuchsia => "&v",
+            Color::MediumOrchid => "&w",
+            Color::MediumPurple => "&x",
+        }
+    }
+
     pub fn from_str(origin: &str) -> Option<Color> {
         let color = match origin {
             "&r" => Color::Reset,
             "&0" => Color::Black,
-            "&1" => Color::DarkBlue,
-            "&2" => Color::DarkGreen,
-            "&3" => Color::DarkAqua,
             "&4" => Color::DarkRed,
-            "&5" => Color::DarkPurple,
-            "&6" => Color::Gold,
-            "&7" => Color::Gray,
-            "&8" => Color::DarkGray,
-            "&9" => Color::Blue,
-            "&a" => Color::Green,
-            "&b" => Color::Aqua,
             "&c" => Color::Red,
-            "&d" => Color::LightPurple,
+            "&o" => Color::Coral,
+            "&s" => Color::Orange,
+            "&6" => Color::Gold,
             "&e" => Color::Yellow,
-            "&f" => Color::White,
-
+            "&a" => Color::Green,
+            "&2" => Color::DarkGreen,
+            "&h" => Color::HunterGreen,
+            "&b" => Color::Aqua,
+            "&3" => Color::DarkAqua,
+            "&9" => Color::Blue,
+            "&1" => Color::DarkBlue,
+            "&d" => Color::LightPurple,
+            "&5" => Color::DarkPurple,
             "&g" => Color::Violet,
             "&l" => Color::Magenta,
             "&m" => Color::Pink,
-            "&o" => Color::Coral,
-            "&s" => Color::Orange,
+            "&p" => Color::Thistle,
+            "&q" => Color::Plum,
+            "&u" => Color::Orchid,
+            "&v" => Color::Fuchsia,
+            "&w" => Color::MediumOrchid,
+            "&x" => Color::MediumPurple,
+
+            "&f" => Color::White,
+            "&7" => Color::Gray,
+            "&8" => Color::DarkGray,
             _ => return None,
         };
         Some(color)
@@ -69,12 +186,13 @@ impl Color {
             Color::Black => "38;2;0;0;0".into(),
             Color::DarkBlue => "38;2;0;0;170".into(),
             Color::DarkGreen => "38;2;0;170;0".into(),
+            Color::HunterGreen => "38;2;53;94;59".into(),
             Color::DarkAqua => "38;2;0;170;170".into(),
             Color::DarkRed => "38;2;170;0;0".into(),
             Color::DarkPurple => "38;2;170;0;170".into(),
             Color::Gold => "38;2;255;170;0".into(),
             Color::Gray => "38;2;170;170;170".into(),
-            Color::DarkGray => "38;2;120;120;120".into(),
+            Color::DarkGray => "38;2;102;102;102".into(),
             Color::Blue => "38;2;85;85;255".into(),
             Color::Green => "38;2;85;255;85".into(),
             Color::Aqua => "38;2;85;255;255".into(),
@@ -88,6 +206,12 @@ impl Color {
             Color::Pink => "38;2;200;100;170".into(),
             Color::Coral => "38;2;235;130;120".into(),
             Color::Orange => "38;2;255;170;80".into(),
+            Color::Thistle => "38;2;216;191;216".into(),
+            Color::Plum => "38;2;221;160;221".into(),
+            Color::Orchid => "38;2;218;112;214".into(),
+            Color::Fuchsia => "38;2;255;0;255".into(),
+            Color::MediumOrchid => "38;2;186;85;211".into(),
+            Color::MediumPurple => "38;2;147;112;219".into(),
         }
     }
 
@@ -101,12 +225,13 @@ impl Color {
             Color::Black => "[color=#000000]".into(),
             Color::DarkBlue => "[color=#0000AA]".into(),
             Color::DarkGreen => "[color=#00AA00]".into(),
+            Color::HunterGreen => "[color=#355E3B]".into(),
             Color::DarkAqua => "[color=#00AAAA]".into(),
             Color::DarkRed => "[color=#AA0000]".into(),
             Color::DarkPurple => "[color=#AA00AA]".into(),
             Color::Gold => "[color=#FFAA00]".into(),
             Color::Gray => "[color=#AAAAAA]".into(),
-            Color::DarkGray => "[color=#787878]".into(),
+            Color::DarkGray => "[color=#666666]".into(),
             Color::Blue => "[color=#5555FF]".into(),
             Color::Green => "[color=#55FF55]".into(),
             Color::Aqua => "[color=#55FFFF]".into(),
@@ -120,6 +245,12 @@ impl Color {
             Color::Pink => "[color=#C864AA]".into(),
             Color::Coral => "[color=#EB8278]".into(),
             Color::Orange => "[color=#FFAA50]".into(),
+            Color::Thistle => "[color=#D8BFD8]".into(),
+            Color::Plum => "[color=#DDA0DD]".into(),
+            Color::Orchid => "[color=#DA70D6]".into(),
+            Color::Fuchsia => "[color=#FF00FF]".into(),
+            Color::MediumOrchid => "[color=#BA55D3]".into(),
+            Color::MediumPurple => "[color=#9370DB]".into(),
         }
     }
 }
@@ -208,7 +339,7 @@ mod tests {
         let r = parse_to_console_godot(&"time: &8main &aINFO&r: text".to_string());
         assert_eq!(
             r,
-            "time: [color=#787878]main [color=#55FF55]INFO[/color]: text[/color]".to_string()
+            "time: [color=#666666]main [color=#55FF55]INFO[/color]: text[/color]".to_string()
         );
     }
 }
