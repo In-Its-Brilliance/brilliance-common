@@ -100,6 +100,12 @@ impl Inventory {
         self.slots.swap(a_index, b_index);
     }
 
+    pub fn clear(&mut self) {
+        for slot in &mut self.slots {
+            *slot = None;
+        }
+    }
+
     pub fn add_item(
         &mut self,
         item: Item,

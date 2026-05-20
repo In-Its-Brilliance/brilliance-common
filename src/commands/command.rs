@@ -1,5 +1,6 @@
 use ahash::HashMap;
 use regex::Regex;
+use std::any::Any;
 use std::slice::Iter;
 use std::str::FromStr;
 
@@ -41,12 +42,53 @@ impl Command {
         self.commands.iter()
     }
 
+    fn usage(&self, prefix: &str) -> String {
+        let mut usage = if prefix.is_empty() {
+            self.name.clone()
+        } else {
+            format!("{} {}", prefix, self.name)
+        };
+
+        if !self.commands.is_empty() {
+            let subcommands = self
+                .commands
+                .iter()
+                .map(|command| command.name.as_str())
+                .collect::<Vec<_>>()
+                .join("|");
+            if self.subcommand_required {
+                usage.push_str(&format!(" <{}>", subcommands));
+            } else {
+                usage.push_str(&format!(" [<{}>]", subcommands));
+            }
+        }
+
+        for arg in &self.args {
+            if arg.required {
+                usage.push_str(&format!(" <{}>", arg.name));
+            } else {
+                usage.push_str(&format!(" [{}]", arg.name));
+            }
+        }
+
+        usage
+    }
+
     /// command_sequence example:
     /// "world"  "create"    "test"      "123"
     /// ^command ^subcommand ^arg        ^arg optional
     ///  name     name        world name  seed
     pub fn eval(&self, command_sequence: &[String]) -> Result<CommandMatch, String> {
+        self.eval_with_prefix(command_sequence, "")
+    }
+
+    fn eval_with_prefix(&self, command_sequence: &[String], prefix: &str) -> Result<CommandMatch, String> {
         let mut args: HashMap<String, String> = Default::default();
+        let command_path = if prefix.is_empty() {
+            self.name.clone()
+        } else {
+            format!("{} {}", prefix, self.name)
+        };
 
         let mut subcommand: Option<Box<CommandMatch>> = None;
         if command_sequence.len() > 0 {
@@ -54,7 +96,7 @@ impl Command {
                 // if command matches
                 // println!("command.name:{} command_sequence[0]:{}", command.name, command_sequence[0]);
                 if command.name == command_sequence[0] {
-                    let command_match = command.eval(&command_sequence[1..])?;
+                    let command_match = command.eval_with_prefix(&command_sequence[1..], &command_path)?;
                     subcommand = Some(Box::new(command_match));
                     break;
                 }
@@ -63,7 +105,11 @@ impl Command {
 
         // println!("subcommand:{:?} self.subcommand_required:{}", subcommand, self.subcommand_required);
         if subcommand.is_none() && self.subcommand_required {
-            return Err(format!("&csubcommand for &4\"{}\" &cis required", self.name));
+            return Err(format!(
+                "&cSubcommand for &4\"{}\" &cis required. &4Usage: &o{}",
+                self.name,
+                self.usage(prefix)
+            ));
         }
 
         let mut i = 0;
@@ -82,7 +128,11 @@ impl Command {
                 }
                 None => {
                     if arg.required {
-                        return Err(format!("&cargument &4\"{}\" &cis required", arg.name));
+                        return Err(format!(
+                            "&cArgument &4\"{}\" &cis required. &4Usage: &o{}",
+                            arg.name,
+                            self.usage(prefix)
+                        ));
                     }
                 }
             }
@@ -133,7 +183,14 @@ impl Command {
 #[derive(Clone, Debug)]
 pub enum ArgType {
     Choices(Vec<String>),
+    Callback(ArgCompleter),
 }
+
+pub trait ArgCompleterContext {
+    fn world(&self) -> &dyn Any;
+}
+
+pub type ArgCompleter = fn(&dyn ArgCompleterContext, &str) -> Vec<String>;
 
 #[derive(Clone, Debug, Default)]
 pub struct Arg {
@@ -168,6 +225,11 @@ impl Arg {
         self.arg_type = Some(ArgType::Choices(c));
         self
     }
+
+    pub fn completer(mut self, completer: ArgCompleter) -> Self {
+        self.arg_type = Some(ArgType::Callback(completer));
+        self
+    }
 }
 
 #[derive(Clone, Debug)]
@@ -187,9 +249,9 @@ impl CommandMatch {
         match self.args.get(&key) {
             Some(a) => match a.parse::<T>() {
                 Ok(v) => Ok(v),
-                Err(_e) => Err(format!("&cparameter &4{} &cconverting error", self.name)),
+                Err(_e) => Err(format!("&cParameter &4{}&c converting error", self.name)),
             },
-            None => Err("&cparameter has not been provided".to_string()),
+            None => Err("&cParameter has not been provided".to_string()),
         }
     }
 
@@ -249,7 +311,7 @@ mod tests {
         assert_eq!(result.is_err(), true);
         assert_eq!(
             result.err().unwrap().to_string(),
-            "&csubcommand for &4\"world\" &cis required".to_string()
+            "&cSubcommand for &4\"world\" &cis required. &4Usage: &oworld <list|create>".to_string()
         );
     }
 
@@ -264,7 +326,22 @@ mod tests {
         assert_eq!(result.is_err(), true);
         assert_eq!(
             result.err().unwrap().to_string(),
-            "&csubcommand for &4\"world\" &cis required".to_string()
+            "&cSubcommand for &4\"world\" &cis required. &4Usage: &oworld <list|create>".to_string()
+        );
+    }
+
+    #[test]
+    fn test_command_eval_missing_arg_shows_usage() {
+        let command = world_command();
+
+        let cmd = "world create".to_string();
+        let command_sequence = Command::parse_command(&cmd);
+        let result = command.eval(&command_sequence[1..]);
+
+        assert_eq!(result.is_err(), true);
+        assert_eq!(
+            result.err().unwrap().to_string(),
+            "&cArgument &4\"slug\" &cis required. &4Usage: &oworld create <slug> [seed]".to_string()
         );
     }
 

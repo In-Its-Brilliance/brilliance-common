@@ -10,8 +10,8 @@ use super::{EventInterface, EventReader};
 /// # Example
 ///
 /// ```
-/// use crate::utils::events::event_channel::EventChannel;
-/// use crate::utils::events::{EventInterface, EventReader};
+/// use common::utils::events::event_channel::EventChannel;
+/// use common::utils::events::{EventInterface, EventReader};
 ///
 /// let mut channel = EventChannel::<String>::default();
 /// let reader = channel.get_reader();

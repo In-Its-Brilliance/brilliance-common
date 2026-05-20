@@ -1,9 +1,10 @@
 use crate::utils::string_remove_range;
 
-use super::command::{ArgType, Command};
+use super::command::{ArgCompleterContext, ArgType, Command};
+use serde::{Deserialize, Serialize};
 
 /// Requesting options for completing the console command
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CompleteRequest {
     line: String,
     pos: usize,
@@ -22,7 +23,7 @@ impl CompleteRequest {
     }
 }
 
-#[derive(Clone, PartialEq)]
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Completion {
     display: String,
     completion: String,
@@ -54,6 +55,7 @@ impl Completion {
 }
 
 /// Responding to a request to retrieve console command options
+#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CompleteResponse {
     offset: usize,
     request: CompleteRequest,
@@ -93,14 +95,39 @@ impl CompleteResponse {
         self.completions.push(completion);
     }
 
-    pub fn complete<'a>(request: &CompleteRequest, commands: impl Iterator<Item = &'a Command>) -> CompleteResponse {
+    pub fn sort_completions(&mut self) {
+        self.completions.sort_by(|a, b| a.get_completion().cmp(b.get_completion()));
+    }
+
+    pub fn merge_from(&mut self, other: &CompleteResponse) {
+        for completion in other.get_completions() {
+            if self
+                .completions
+                .iter()
+                .any(|existing| existing.get_completion() == completion.get_completion())
+            {
+                continue;
+            }
+            self.add_completion(completion.clone());
+        }
+    }
+
+    pub fn complete<'a>(
+        request: &CompleteRequest,
+        commands: impl Iterator<Item = &'a Command>,
+        context: Option<&dyn ArgCompleterContext>,
+    ) -> CompleteResponse {
         let line = request.get_line().clone();
         let pos = request.get_pos().clone();
 
         let mut complete_response: CompleteResponse = Self::create(request.clone());
 
         let line_to_pos: String = line.chars().take(pos).collect();
-        let command_sequence = Command::parse_command(&line_to_pos);
+        let mut command_sequence = Command::parse_command(&line_to_pos);
+        let has_trailing_space = line_to_pos.chars().last().map(|c| c.is_whitespace()).unwrap_or(false);
+        if has_trailing_space && command_sequence.last().map(|s| !s.is_empty()).unwrap_or(true) {
+            command_sequence.push(String::new());
+        }
 
         // Return all command names
         if command_sequence.len() == 0 {
@@ -136,6 +163,16 @@ impl CompleteResponse {
                             match arg_type {
                                 ArgType::Choices(choices) => {
                                     for choice in choices {
+                                        if let Some(completion) = Completion::generate_completion(&last_arg, choice) {
+                                            complete_response.add_completion(completion);
+                                        }
+                                    }
+                                }
+                                ArgType::Callback(callback) => {
+                                    let Some(context) = context else {
+                                        continue;
+                                    };
+                                    for choice in callback(context, &last_arg) {
                                         if let Some(completion) = Completion::generate_completion(&last_arg, &choice) {
                                             complete_response.add_completion(completion);
                                         }
@@ -204,7 +241,7 @@ mod tests {
         let request = CompleteRequest::create("ex", 2);
         let commands = get_commands();
 
-        let complitions = CompleteResponse::complete(&request, commands.iter());
+        let complitions = CompleteResponse::complete(&request, commands.iter(), None);
         assert_eq!(*complitions.get_offset(), 2);
 
         assert_eq!(complitions.get_completions().len(), 1);
