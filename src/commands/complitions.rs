@@ -31,12 +31,17 @@ pub struct Completion {
 
 impl Completion {
     fn generate_completion(input: &String, target: &String) -> Option<Self> {
-        let Some(i) = target.find(input) else {
+        let input = input.trim();
+        let target_lower = target.to_lowercase();
+        let input_lower = input.to_lowercase();
+
+        if !target_lower.starts_with(&input_lower) {
             return None;
-        };
+        }
+
         let mut display = target.clone();
-        display.insert_str(i, "&a");
-        display.insert_str(i + input.len() + 2, "&r&f");
+        display.insert_str(0, "&a");
+        display.insert_str(input.len() + 2, "&r&f");
 
         Some(Self {
             display,
@@ -192,6 +197,11 @@ impl CompleteResponse {
             }
             break;
         }
+
+        if *complete_response.get_offset() == 0 && command_sequence.len() > 1 {
+            let last_arg = command_sequence[command_sequence.len() - 1].clone();
+            complete_response.set_offset(last_arg.len());
+        }
         return complete_response;
     }
 }
@@ -227,6 +237,9 @@ mod tests {
         let c = Command::new("exit".to_string());
         commands.push(c);
 
+        let c = Command::new("Honnisha".to_string());
+        commands.push(c);
+
         let setting_choices = vec!["ssao"];
         let c = Command::new("setting".to_string())
             .arg(Arg::new("name".to_owned()).required(true).choices(setting_choices))
@@ -252,6 +265,29 @@ mod tests {
 
         assert_eq!(new_input, "exit");
         assert_eq!(caret_column, 4);
+    }
+
+    #[test]
+    fn test_complete_case_insensitive_prefix() {
+        let request = CompleteRequest::create("h", 1);
+        let commands = get_commands();
+
+        let complitions = CompleteResponse::complete(&request, commands.iter(), None);
+        assert_eq!(*complitions.get_offset(), 1);
+
+        assert_eq!(complitions.get_completions().len(), 1);
+        let complition = complitions.get_completions().iter().next().unwrap();
+        assert_eq!(complition.get_completion(), "Honnisha");
+    }
+
+    #[test]
+    fn test_complete_unknown_command_keeps_argument_offset() {
+        let request = CompleteRequest::create("give H", 6);
+        let commands = get_commands();
+
+        let complitions = CompleteResponse::complete(&request, commands.iter(), None);
+        assert_eq!(*complitions.get_offset(), 1);
+        assert!(complitions.get_completions().is_empty());
     }
 
     #[test]
