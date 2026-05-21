@@ -14,6 +14,8 @@ pub struct ItemInfo {
     item_type: ItemType,
     title: String,
     description: String,
+    #[serde(default = "ItemInfo::default_max_stack_size")]
+    max_stack_size: u16,
 }
 
 #[derive(Clone, Serialize, Deserialize)]
@@ -29,6 +31,10 @@ pub enum ItemType {
         weapon_kind: WeaponKind,
         icon: String,
         model: String,
+    },
+    #[serde(rename = "other")]
+    Other {
+        icon: String,
     },
 }
 
@@ -50,20 +56,31 @@ impl ItemType {
             model: model.into(),
         }
     }
+
+    pub fn other(icon: impl Into<String>) -> Self {
+        Self::Other { icon: icon.into() }
+    }
 }
 
 impl ItemInfo {
+    fn default_max_stack_size() -> u16 {
+        1
+    }
+
     pub fn create(
         slug: impl Into<String>,
         item_type: ItemType,
         title: impl Into<String>,
         description: impl Into<String>,
+        max_stack_size: u16,
     ) -> Self {
+        assert!(max_stack_size >= 1, "max_stack_size must be at least 1");
         Self {
             slug: slug.into(),
             item_type,
             title: title.into(),
             description: description.into(),
+            max_stack_size,
         }
     }
 
@@ -81,6 +98,10 @@ impl ItemInfo {
 
     pub fn get_description(&self) -> &String {
         &self.description
+    }
+
+    pub fn get_max_stack_size(&self) -> u16 {
+        self.max_stack_size
     }
 }
 
