@@ -66,6 +66,11 @@ impl ClientItem {
         self.amount
     }
 
+    pub fn amount(mut self, amount: u16) -> Self {
+        self.amount = amount;
+        self
+    }
+
     pub fn get_icon(&self) -> Option<&String> {
         self.icon.as_ref()
     }
@@ -139,5 +144,9 @@ impl Item {
 
     pub fn get_amount(&self) -> u16 {
         self.amount
+    }
+
+    pub fn can_stack_with(&self, other: &Item) -> bool {
+        self.item_kind == other.item_kind && self.modifiers == other.modifiers
     }
 }

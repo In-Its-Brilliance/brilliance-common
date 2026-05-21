@@ -117,13 +117,13 @@ impl IWorldStorage for RedbWorldStorage {
     }
 
     fn save_chunk_data(&self, chunk_position: &ChunkPosition, data: &ChunkStorage) -> Result<Self::PrimaryKey, String> {
+        let encoded = data.compress();
+
         let write_txn = self.db.begin_write().map_err(|e| e.to_string())?;
         let key = Self::chunk_key(chunk_position);
 
         {
             let mut table = write_txn.open_table(TABLE_CHUNKS).map_err(|e| e.to_string())?;
-            let encoded = data.compress();
-
             table
                 .insert(key.as_str(), encoded.as_slice())
                 .map_err(|e| e.to_string())?;

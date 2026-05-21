@@ -109,13 +109,76 @@ impl Inventory {
     pub fn add_item(
         &mut self,
         item: Item,
+        max_stack_size: u16,
         mut emit: impl FnMut(usize, Option<&Item>),
     ) -> Result<(), InventoryAddItemError> {
-        let Some(slot_index) = self.slots.iter().position(|slot| slot.is_none()) else {
+        if item.get_amount() == 0 {
+            return Ok(());
+        }
+
+        let mut remaining = item.get_amount();
+        let mut total_capacity = 0u32;
+
+        for slot in &self.slots {
+            match slot {
+                Some(existing) if existing.can_stack_with(&item) => {
+                    total_capacity += u32::from(max_stack_size.saturating_sub(existing.get_amount()));
+                }
+                None => {
+                    total_capacity += u32::from(max_stack_size);
+                }
+                _ => {}
+            }
+
+            if total_capacity >= u32::from(remaining) {
+                break;
+            }
+        }
+
+        if total_capacity < u32::from(remaining) {
             return Err(InventoryAddItemError::Full);
-        };
-        self.slots[slot_index] = Some(item);
-        emit(slot_index, self.slots[slot_index].as_ref());
+        }
+
+        for slot_index in 0..self.slots.len() {
+            if remaining == 0 {
+                break;
+            }
+
+            let Some(existing) = self.slots[slot_index].as_ref() else {
+                continue;
+            };
+            if !existing.can_stack_with(&item) {
+                continue;
+            }
+
+            let space = max_stack_size.saturating_sub(existing.get_amount());
+            if space == 0 {
+                continue;
+            }
+
+            let added = remaining.min(space);
+            let updated = existing.clone().amount(existing.get_amount() + added);
+            self.slots[slot_index] = Some(updated);
+            remaining -= added;
+            emit(slot_index, self.slots[slot_index].as_ref());
+        }
+
+        for slot_index in 0..self.slots.len() {
+            if remaining == 0 {
+                break;
+            }
+
+            if self.slots[slot_index].is_some() {
+                continue;
+            }
+
+            let added = remaining.min(max_stack_size);
+            let updated = item.clone().amount(added);
+            self.slots[slot_index] = Some(updated);
+            remaining -= added;
+            emit(slot_index, self.slots[slot_index].as_ref());
+        }
+
         Ok(())
     }
 }
