@@ -1,6 +1,7 @@
 use super::{EventInterface, EventReader};
 use std::cell::RefCell;
 
+#[derive(Clone)]
 pub struct EventBroadcast<T> {
     tx: tokio::sync::broadcast::Sender<T>,
 }

@@ -22,6 +22,7 @@ use super::{EventInterface, EventReader};
 /// let events: Vec<_> = reader.iter_events().collect();
 /// assert_eq!(events, vec!["hello", "world"]);
 /// ```
+#[derive(Clone)]
 pub struct EventChannel<T> {
     tx: flume::Sender<T>,
     rx: flume::Receiver<T>,
