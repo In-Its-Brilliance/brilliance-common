@@ -9,9 +9,16 @@ extern "ExtismHost" {
 }
 
 #[derive(Clone, Serialize, Deserialize)]
+pub enum ItemDisplay {
+    #[serde(rename = "icon")]
+    Icon(String),
+}
+
+#[derive(Clone, Serialize, Deserialize)]
 pub struct ItemInfo {
     slug: String,
     item_type: ItemType,
+    item_display: ItemDisplay,
     title: String,
     description: String,
     #[serde(default = "ItemInfo::default_max_stack_size")]
@@ -23,42 +30,36 @@ pub enum ItemType {
     #[serde(rename = "armor")]
     Armor {
         body_part: BodyPart,
-        icon: String,
         model: String,
     },
     #[serde(rename = "weapon")]
     Weapon {
         weapon_kind: WeaponKind,
-        icon: String,
         model: String,
     },
     #[serde(rename = "other")]
-    Other {
-        icon: String,
-    },
+    Other,
 }
 
 pub struct ItemsManager;
 
 impl ItemType {
-    pub fn armor(body_part: BodyPart, icon: impl Into<String>, model: impl Into<String>) -> Self {
+    pub fn armor(body_part: BodyPart, model: impl Into<String>) -> Self {
         Self::Armor {
             body_part,
-            icon: icon.into(),
             model: model.into(),
         }
     }
 
-    pub fn weapon(weapon_kind: WeaponKind, icon: impl Into<String>, model: impl Into<String>) -> Self {
+    pub fn weapon(weapon_kind: WeaponKind, model: impl Into<String>) -> Self {
         Self::Weapon {
             weapon_kind,
-            icon: icon.into(),
             model: model.into(),
         }
     }
 
-    pub fn other(icon: impl Into<String>) -> Self {
-        Self::Other { icon: icon.into() }
+    pub fn other() -> Self {
+        Self::Other
     }
 }
 
@@ -70,6 +71,7 @@ impl ItemInfo {
     pub fn create(
         slug: impl Into<String>,
         item_type: ItemType,
+        item_display: ItemDisplay,
         title: impl Into<String>,
         description: impl Into<String>,
         max_stack_size: u16,
@@ -78,6 +80,7 @@ impl ItemInfo {
         Self {
             slug: slug.into(),
             item_type,
+            item_display,
             title: title.into(),
             description: description.into(),
             max_stack_size,
@@ -90,6 +93,10 @@ impl ItemInfo {
 
     pub fn get_item_type(&self) -> &ItemType {
         &self.item_type
+    }
+
+    pub fn get_item_display(&self) -> &ItemDisplay {
+        &self.item_display
     }
 
     pub fn get_title(&self) -> &String {
