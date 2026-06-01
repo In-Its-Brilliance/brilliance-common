@@ -5,7 +5,7 @@ use serde::{Deserialize, Serialize};
 
 use crate::chunks::chunk_data::BlockIndexType;
 
-#[derive(Display, Serialize, Deserialize, Debug, Clone, PartialEq)]
+#[derive(Display, Serialize, Deserialize, Debug, Clone, PartialEq, Eq, Hash)]
 #[serde(rename_all = "snake_case")]
 pub enum BodyPart {
     Chest,
@@ -29,6 +29,8 @@ pub enum ClientItemKind {
     // Non block or model item.
     // Used png resource texture as an icon.
     Icon(String),
+
+    NotFound,
 }
 
 /// Client item info
