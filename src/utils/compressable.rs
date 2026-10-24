@@ -2,14 +2,14 @@ use serde::{de::DeserializeOwned, Serialize};
 
 pub trait Compressable: Serialize + Sized {
     fn encode(&self) -> Vec<u8> {
-        bincode::serialize(&self).unwrap()
+        postcard::to_allocvec(&self).unwrap()
     }
 
     fn decode(encoded: Vec<u8>) -> Result<Self, String>
     where
         Self: DeserializeOwned,
     {
-        bincode::deserialize(&encoded).map_err(|e| format!("Decode error: {}", e))
+        postcard::from_bytes(&encoded).map_err(|e| format!("Decode error: {}", e))
     }
 
     #[cfg(feature = "zstd")]

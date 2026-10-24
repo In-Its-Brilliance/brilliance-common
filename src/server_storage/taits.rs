@@ -9,9 +9,9 @@ pub struct PlayerData {
     username: String,
     json: JsonValue,
     inventory: Inventory,
-    created_at: u64,
-    last_login_at: u64,
-    updated_at: u64,
+    created_at: i64,
+    last_login_at: i64,
+    updated_at: i64,
 }
 
 impl PlayerData {
@@ -25,9 +25,9 @@ impl PlayerData {
         username: impl Into<String>,
         json: JsonValue,
         inventory: Inventory,
-        created_at: u64,
-        last_login_at: u64,
-        updated_at: u64,
+        created_at: i64,
+        last_login_at: i64,
+        updated_at: i64,
     ) -> Self {
         Self {
             username: username.into(),
@@ -59,24 +59,25 @@ impl PlayerData {
         &mut self.inventory
     }
 
-    pub fn get_created_at(&self) -> u64 {
+    pub fn get_created_at(&self) -> i64 {
         self.created_at
     }
 
-    pub fn get_last_login_at(&self) -> u64 {
+    pub fn get_last_login_at(&self) -> i64 {
         self.last_login_at
     }
 
-    pub fn get_updated_at(&self) -> u64 {
+    pub fn get_updated_at(&self) -> i64 {
         self.updated_at
     }
 }
 
-pub fn current_unix_timestamp() -> u64 {
-    SystemTime::now()
+pub fn current_unix_timestamp() -> i64 {
+    let seconds = SystemTime::now()
         .duration_since(UNIX_EPOCH)
         .unwrap_or_default()
-        .as_secs()
+        .as_secs();
+    i64::try_from(seconds).expect("Unix timestamp exceeds i64 range")
 }
 
 #[derive(Clone, Debug, PartialEq, Eq)]

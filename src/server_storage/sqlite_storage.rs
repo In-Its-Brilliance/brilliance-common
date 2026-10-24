@@ -54,9 +54,9 @@ impl SQLiteServerStorage {
         let inventory = serde_json::from_str::<Inventory>(&row.get::<_, String>(3)?)
             .map_err(|e| rusqlite::Error::InvalidParameterName(e.to_string()))?;
         let inventory = inventory.with_id(inventory_id);
-        let created_at = row.get::<_, u64>(4)?;
-        let last_login_at = row.get::<_, u64>(5)?;
-        let updated_at = row.get::<_, u64>(6)?;
+        let created_at = row.get::<_, i64>(4)?;
+        let last_login_at = row.get::<_, i64>(5)?;
+        let updated_at = row.get::<_, i64>(6)?;
 
         Ok(PlayerData::create_with_timestamps(
             username,
